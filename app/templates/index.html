@@ -1,0 +1,743 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pneumonia Segmentation</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:IBM+Plex+Sans:wght@300;400;500&display=swap");
+
+      :root {
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --accent-dim: #1e293b;
+        --bg-page: #0f172a;
+        --bg-topbar: #1e293b;
+        --bg-panel: #1e293b;
+        --bg-preview: #020617;
+        --bg-upload: #1e293b;
+        --bg-upload-hover: #334155;
+        --border: #334155;
+        --border-accent: #3b82f6;
+        --border-history: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --text-dim: #64748b;
+        --text-faint: #475569;
+        --green: #22c55e;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --red-bg: #450a0a;
+        --red-border: #991b1b;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "IBM Plex Sans", sans-serif;
+        background: var(--bg-page);
+        color: var(--text-secondary);
+        min-height: 100vh;
+      }
+
+      .topbar {
+        border-bottom: 1px solid var(--border);
+        padding: 14px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-topbar);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: "Space Mono", monospace;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        color: var(--text-primary);
+        text-transform: uppercase;
+      }
+
+      .logo-icon {
+        width: 28px;
+        height: 28px;
+        border: 1.5px solid var(--accent);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        color: var(--green);
+        letter-spacing: 0.05em;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 40px 32px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .panel-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-num {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        color: var(--accent);
+        background: var(--accent-dim);
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+
+      .panel-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .panel-label {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+        margin-left: auto;
+      }
+
+      .upload-zone {
+        margin: 20px;
+        border: 1.5px dashed var(--border);
+        border-radius: 10px;
+        padding: 24px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        background: var(--bg-upload);
+      }
+
+      .upload-zone:hover,
+      .upload-zone.drag {
+        border-color: var(--accent);
+        background: var(--bg-upload-hover);
+      }
+
+      .upload-icon {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 10px;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .upload-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--text-dim);
+        fill: none;
+        stroke-width: 1.5;
+      }
+
+      .upload-main {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+      .upload-sub {
+        font-size: 12px;
+        color: var(--text-faint);
+      }
+      .upload-sub span {
+        color: var(--accent);
+      }
+
+      .btn-run {
+        display: block;
+        width: calc(100% - 40px);
+        margin: 0 20px 20px;
+        padding: 12px;
+        background: var(--accent);
+        border: none;
+        border-radius: 8px;
+        color: #0a0e14;
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        letter-spacing: 0.02em;
+      }
+
+      .btn-run:disabled {
+        background: var(--accent-dim);
+        color: var(--text-faint);
+        cursor: not-allowed;
+      }
+      .btn-run:not(:disabled):hover {
+        background: var(--accent-hover);
+      }
+
+      .metrics-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1px;
+        background: var(--border);
+        border-top: 1px solid var(--border);
+      }
+
+      .metric {
+        background: var(--bg-panel);
+        padding: 14px 16px;
+        text-align: center;
+      }
+      .metric-val {
+        font-family: "Space Mono", monospace;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+      }
+      .metric-val.good {
+        color: var(--green);
+      }
+      .metric-val.warn {
+        color: var(--amber);
+      }
+      .metric-lbl {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 4px;
+        font-family: "Space Mono", monospace;
+      }
+
+      .preview-box {
+        margin: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-preview);
+        min-height: 260px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .preview-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .preview-placeholder {
+        text-align: center;
+        color: #2a3548;
+      }
+      .preview-placeholder svg {
+        width: 40px;
+        height: 40px;
+        stroke: #2a3548;
+        fill: none;
+        stroke-width: 1;
+        margin-bottom: 12px;
+      }
+      .preview-placeholder p {
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+      }
+
+      .overlay-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(10, 14, 20, 0.85);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-family: "Space Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .latency-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(10, 14, 20, 0.85);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-family: "Space Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        color: var(--green);
+      }
+
+      /* ── DRIFT BADGE (NEW) ── */
+      .drift-badge {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(10, 14, 20, 0.88);
+        border-radius: 5px;
+        padding: 4px 10px;
+        font-family: "Space Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .drift-badge.ok {
+        border: 1px solid #166534;
+        color: var(--green);
+      }
+      .drift-badge.warn {
+        border: 1px solid #92400e;
+        color: var(--amber);
+      }
+      .drift-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .drift-badge.ok .drift-dot {
+        background: var(--green);
+      }
+      .drift-badge.warn .drift-dot {
+        background: var(--amber);
+        animation: pulse 1.2s infinite;
+      }
+
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin: auto;
+      }
+
+      .loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 14, 20, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+      }
+
+      .loading-text {
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        animation: blink 1.2s ease infinite;
+      }
+
+      .full-span {
+        grid-column: 1 / -1;
+      }
+
+      .history-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 20px;
+        border-bottom: 1px solid var(--border-history);
+        font-size: 12px;
+      }
+      .history-row:last-child {
+        border-bottom: none;
+      }
+
+      .h-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+        background: #1a2030;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .h-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .h-name {
+        color: var(--text-muted);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .h-lat {
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        color: var(--text-dim);
+        min-width: 54px;
+        text-align: right;
+      }
+
+      /* drift badge in history row (NEW) */
+      .h-drift {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        min-width: 60px;
+        text-align: right;
+      }
+      .h-drift.ok {
+        color: var(--green);
+      }
+      .h-drift.warn {
+        color: var(--amber);
+      }
+
+      .h-time {
+        font-family: "Space Mono", monospace;
+        font-size: 10px;
+        color: var(--text-faint);
+        min-width: 70px;
+        text-align: right;
+      }
+      .h-empty {
+        color: var(--text-faint);
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        padding: 16px 20px;
+      }
+
+      .error-bar {
+        margin: 0 20px 16px;
+        padding: 10px 14px;
+        background: var(--red-bg);
+        border: 1px solid var(--red-border);
+        border-radius: 8px;
+        font-family: "Space Mono", monospace;
+        font-size: 11px;
+        color: var(--red);
+        display: none;
+      }
+
+      @media (max-width: 700px) {
+        .main {
+          grid-template-columns: 1fr;
+          padding: 20px 16px;
+        }
+        .full-span {
+          grid-column: 1;
+        }
+        .topbar {
+          padding: 12px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8b89a" stroke-width="1.8">
+            <ellipse cx="12" cy="12" rx="9" ry="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <path d="M12 6 C8 9, 8 15, 12 18 C16 15, 16 9, 12 6" />
+          </svg>
+        </div>
+        Pneumonia Seg
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        MODEL ONLINE &middot; ONNX INT8
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Input panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-num">01</span>
+          <span class="panel-title">Input</span>
+          <span class="panel-label">CT Scan / X-Ray</span>
+        </div>
+
+        <div class="upload-zone" id="dropZone">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <p class="upload-main" id="uploadMain">Drop CT scan here</p>
+          <p class="upload-sub" id="uploadSub">or <span>browse files</span> &middot; PNG, JPG</p>
+          <input type="file" id="fileInput" accept="image/*" style="display: none" />
+        </div>
+
+        <div class="error-bar" id="errorBar"></div>
+        <button class="btn-run" id="runBtn" disabled>Run segmentation</button>
+
+        <div class="metrics-row">
+          <div class="metric">
+            <div class="metric-val good" id="mLat">&mdash;</div>
+            <div class="metric-lbl">Latency</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" id="mW">&mdash;</div>
+            <div class="metric-lbl">Width</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" id="mH">&mdash;</div>
+            <div class="metric-lbl">Height</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-num">02</span>
+          <span class="panel-title">Segmentation output</span>
+        </div>
+
+        <div class="preview-box" id="previewBox">
+          <div class="preview-placeholder">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+            <p>Awaiting input</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History panel -->
+      <div class="panel full-span">
+        <div class="panel-header">
+          <span class="panel-num">03</span>
+          <span class="panel-title">Inference history</span>
+        </div>
+        <div id="historyList">
+          <div class="h-empty">No inferences yet this session.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const runBtn = document.getElementById("runBtn");
+      const previewBox = document.getElementById("previewBox");
+      const errorBar = document.getElementById("errorBar");
+      const historyList = document.getElementById("historyList");
+      let selectedFile = null;
+      const history = [];
+
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag");
+      });
+      dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag"));
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag");
+        const f = e.dataTransfer.files[0];
+        if (f) handleFile(f);
+      });
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+      });
+
+      function handleFile(f) {
+        selectedFile = f;
+        runBtn.disabled = false;
+        document.getElementById("uploadMain").textContent = f.name;
+        document.getElementById("uploadSub").textContent = (f.size / 1024).toFixed(1) + " KB";
+        errorBar.style.display = "none";
+      }
+
+      runBtn.addEventListener("click", async () => {
+        if (!selectedFile) return;
+
+        errorBar.style.display = "none";
+        runBtn.disabled = true;
+        previewBox.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><div class="loading-text">Running inference...</div></div>';
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const t0 = performance.now();
+        try {
+          const res = await fetch("/predict", { method: "POST", body: formData });
+          const lat = Math.round(performance.now() - t0);
+
+          if (!res.ok) throw new Error("Server error " + res.status);
+
+          // ── Read drift headers ──
+          const driftScore = parseFloat(res.headers.get("X-Drift-Score") || "0");
+          const driftDetected = res.headers.get("X-Drift-Detected") === "1";
+          const driftStatus = res.headers.get("X-Drift-Status"); // "ok", "warn", "fail"
+
+          let driftClass = "ok";
+          let driftLabel = `NO DRIFT · ${driftScore.toFixed(4)}`;
+
+          if (driftStatus === "warn") {
+            driftClass = "warn";
+            driftLabel = `UNCERTAIN DATA · ${driftScore.toFixed(4)}`;
+            errorBar.textContent = "Warning: Input looks unusual. Result may be less accurate.";
+            errorBar.style.display = "block";
+            errorBar.style.background = "#fff3cd";
+            errorBar.style.color = "#856404";
+          } else if (driftStatus === "fail") {
+            driftClass = "error";
+            driftLabel = `OOD DETECTED · ${driftScore.toFixed(4)}`;
+          }
+
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+
+          img.onload = () => {
+            // ── Drift badge ──
+
+            previewBox.innerHTML = `
+              <img src="${url}" alt="result">
+              <span class="drift-badge ${driftClass}">
+                <span class="drift-dot"></span>${driftLabel}
+              </span>`;
+
+            document.getElementById("mLat").textContent = lat + "ms";
+            document.getElementById("mW").textContent = img.naturalWidth + "px";
+            document.getElementById("mH").textContent = img.naturalHeight + "px";
+
+            addHistory(selectedFile.name, url, lat, driftScore, driftDetected);
+            runBtn.disabled = false;
+          };
+          img.src = url;
+        } catch (err) {
+          previewBox.innerHTML = '<div class="preview-placeholder"><p>Error — see below</p></div>';
+          errorBar.textContent = err.message;
+          errorBar.style.display = "block";
+          runBtn.disabled = false;
+        }
+      });
+
+      function addHistory(name, thumbUrl, lat, driftScore, driftDetected) {
+        history.unshift({ name, thumbUrl, lat, driftScore, driftDetected, time: new Date() });
+        if (history.length > 10) history.pop();
+        renderHistory();
+      }
+
+      function timeAgo(d) {
+        const s = Math.round((Date.now() - d) / 1000);
+        if (s < 60) return s + "s ago";
+        if (s < 3600) return Math.round(s / 60) + "min ago";
+        return Math.round(s / 3600) + "h ago";
+      }
+
+      function renderHistory() {
+        historyList.innerHTML = history
+          .map((h) => {
+            const driftClass = h.driftDetected ? "warn" : "ok";
+            const driftLabel = h.driftDetected ? `DRIFT` : `OK`;
+            return `
+            <div class="history-row">
+              <div class="h-thumb"><img src="${h.thumbUrl}" alt=""></div>
+              <span class="h-name">${h.name}</span>
+              <span class="h-drift ${driftClass}">${driftLabel} ${h.driftScore.toFixed(4)}</span>
+              <span class="h-lat">${h.lat}ms</span>
+              <span class="h-time">${timeAgo(h.time)}</span>
+            </div>`;
+          })
+          .join("");
+      }
+
+      setInterval(() => {
+        if (history.length) renderHistory();
+      }, 30000);
+    </script>
+  </body>
+</html>

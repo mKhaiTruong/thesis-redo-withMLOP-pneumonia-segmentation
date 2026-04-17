@@ -1,0 +1,16 @@
+tqdm
+kaggle
+dvc
+pandas
+mlflow
+scipy
+scikit-learn
+dagshub
+nibabel
+tensorrt
+segmentation_models_pytorch
+onnxruntime
+onnx
+
+pywin32 ; platform_system == "Windows"
+pywinpty ; platform_system == "Windows"

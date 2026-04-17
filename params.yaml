@@ -1,0 +1,53 @@
+data_transformation_params:
+  image_size: 256
+  skip_background_ratio: 0.8
+  slice_interval: 4
+  valid_size: 0.1
+  infer_size: 0.1
+
+data_drift_params:
+  drift_threshold: 50.0
+  n_bins: 256
+  max_samples: null
+  seed: 42
+  model_name: "resnet50"
+
+prepare_base_model_params:
+  model_architecture: "Unet"
+  library: "segmentation_models_pytorch"
+  model_name: "manet"
+  encoder: "resnet34"
+  encoder_weights: "imagenet"
+  classes: 1
+  activation: "None"
+
+training_params:
+  lr: 0.0001
+  batch_size: 8
+  decay: 0.0005
+  patience: 5
+  start_epoch: 0
+  epochs: 21
+  workers: 8
+  seed: 42
+  image_size: 256
+  is_augmentation: True
+  metric_mode: "max"
+  loss_function: "focal-loss"
+  lr_scheduler: "OneCycleLR"
+  alpha: 0.25
+  gamma: 2.0
+
+onnx_params:
+  image_size: 256
+
+evaluation_params:
+  batch_size: 8
+  workers: 4
+  image_size: 256
+  is_augmentation: False
+  threshold: 0.5
+
+tensorRT_params:
+  batch_size: 8
+  image_size: 256

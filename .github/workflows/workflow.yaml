@@ -1,0 +1,38 @@
+name: workflow
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["README.md"]
+  pull_request:
+    branches: [main]
+    paths-ignore: ["README.md"]
+
+jobs:
+  integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pip install pytest && pytest tests/ -v
+
+  deploy:
+    name: Deploy to HuggingFace Space
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "ci@github.com"
+          git config --global user.name "GitHub Actions"
+          git push https://bill123mk:${HF_TOKEN}@huggingface.co/spaces/bill123mk/pneumonia_segmentation main --force

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pneumonia-segmentation"
+version = "0.1.0"
+description = "Thesis project - pneumonia detection with MLOPs"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pip-tools>=7.5.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pneumonia-segmentation*"]

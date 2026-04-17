@@ -1,0 +1,17 @@
+-r requirements.in
+-r requirements-app.in
+
+
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.7.0+cu128
+torchvision==0.22.0+cu128
+onnxruntime-gpu
+
+pywin32 ; platform_system == "Windows"
+pywinpty ; platform_system == "Windows"
+
+notebook
+ipykernel
+pytest
+seaborn
+pip-tools

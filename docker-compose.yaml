@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    image: pneumonia-seg
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 512mb
+          cpus: "0.5"
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

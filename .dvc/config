@@ -1,0 +1,4 @@
+[core]
+    remote = origin
+['remote "origin"']
+    url = https://dagshub.com/minhkhai0402/thesis-redo-withMLOP-pneumonia-segmentation.dvc

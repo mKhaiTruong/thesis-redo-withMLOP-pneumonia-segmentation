@@ -1,0 +1,247 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/pneumonia_segmentation/pipeline/stage1_data_ingestion.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/data_ingestion.py
+      hash: md5
+      md5: b66704c141777973b68c8914479526d8
+      size: 2008
+    - path: src/pneumonia_segmentation/pipeline/stage1_data_ingestion.py
+      hash: md5
+      md5: 7f3b85cf6fc32d77e67104cb18874283
+      size: 984
+    outs:
+    - path: artifacts/data_ingestion/COVID-19_CT_SCANS
+      hash: md5
+      md5: c62937e2c70599596dd9c8fb85415bc5.dir
+      size: 7910518772
+      nfiles: 81
+  data_transformation:
+    cmd: python 
+      src/pneumonia_segmentation/pipeline/stage2_data_transformation.py
+    deps:
+    - path: artifacts/data_ingestion/COVID-19_CT_SCANS
+      hash: md5
+      md5: c62937e2c70599596dd9c8fb85415bc5.dir
+      size: 7910518772
+      nfiles: 81
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/data_transformation.py
+      hash: md5
+      md5: 174c6cc90fcad7e81b8d1145f14c6387
+      size: 3765
+    - path: src/pneumonia_segmentation/pipeline/stage2_data_transformation.py
+      hash: md5
+      md5: af443455a9494388a767a26f3f67aa3f
+      size: 1038
+    params:
+      params.yaml:
+        data_transformation_params.image_size: 256
+        data_transformation_params.infer_size: 0.1
+        data_transformation_params.skip_background_ratio: 0.8
+        data_transformation_params.slice_interval: 4
+        data_transformation_params.valid_size: 0.1
+    outs:
+    - path: artifacts/data_transformation/infer
+      hash: md5
+      md5: a489bf42816922869de0f9a86a7d0601.dir
+      size: 5389629
+      nfiles: 118
+    - path: artifacts/data_transformation/train
+      hash: md5
+      md5: 4fe1b0fc2a1be73b37b31443435f305d.dir
+      size: 39212554
+      nfiles: 868
+    - path: artifacts/data_transformation/valid
+      hash: md5
+      md5: d22d00b548e0bf80e517e159575a8946.dir
+      size: 4133096
+      nfiles: 100
+  prepare_base_model:
+    cmd: python src/pneumonia_segmentation/pipeline/stage3_prepare_base_model.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/prepare_base_model.py
+      hash: md5
+      md5: e534c61795eea4c514c86598dfacbfa6
+      size: 1653
+    - path: src/pneumonia_segmentation/pipeline/stage3_prepare_base_model.py
+      hash: md5
+      md5: e7e57768ead443686cf22d7ade968460
+      size: 1015
+    params:
+      params.yaml:
+        prepare_base_model_params.activation: None
+        prepare_base_model_params.classes: 1
+        prepare_base_model_params.encoder: resnet34
+        prepare_base_model_params.encoder_weights: imagenet
+        prepare_base_model_params.model_name: manet
+    outs:
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: cbe46d29d861a739fb7e962172c98eca.dir
+      size: 127395327
+      nfiles: 1
+  training:
+    cmd: python src/pneumonia_segmentation/pipeline/stage4_training.py
+    deps:
+    - path: artifacts/data_transformation/train
+      hash: md5
+      md5: 4fe1b0fc2a1be73b37b31443435f305d.dir
+      size: 39212554
+      nfiles: 868
+    - path: artifacts/data_transformation/valid
+      hash: md5
+      md5: d22d00b548e0bf80e517e159575a8946.dir
+      size: 4133096
+      nfiles: 100
+    - path: artifacts/prepare_base_model
+      hash: md5
+      md5: cbe46d29d861a739fb7e962172c98eca.dir
+      size: 127395327
+      nfiles: 1
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/training.py
+      hash: md5
+      md5: 13b5cc04d58f583fc538456d1e1ca636
+      size: 8098
+    - path: src/pneumonia_segmentation/pipeline/stage4_training.py
+      hash: md5
+      md5: 78e9fdf047422ef035c521299da922a5
+      size: 1237
+    params:
+      params.yaml:
+        training_params.alpha: 0.25
+        training_params.batch_size: 8
+        training_params.decay: 0.0005
+        training_params.epochs: 21
+        training_params.gamma: 2.0
+        training_params.image_size: 256
+        training_params.is_augmentation: true
+        training_params.loss_function: focal-loss
+        training_params.lr: 0.0001
+        training_params.lr_scheduler: OneCycleLR
+        training_params.metric_mode: max
+        training_params.patience: 5
+        training_params.seed: 42
+        training_params.start_epoch: 0
+        training_params.workers: 8
+    outs:
+    - path: artifacts/training
+      hash: md5
+      md5: 774287ed4b9e8dea65f4d397a48e0a50.dir
+      size: 11393017331
+      nfiles: 64
+  evaluation:
+    cmd: python src/pneumonia_segmentation/pipeline/stage6_evaluation.py
+    deps:
+    - path: artifacts/data_transformation/infer
+      hash: md5
+      md5: a489bf42816922869de0f9a86a7d0601.dir
+      size: 5389629
+      nfiles: 118
+    - path: artifacts/onnx
+      hash: md5
+      md5: 3b687588102acb734ce6965b1bee7715.dir
+      size: 832048068
+      nfiles: 16
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/evaluation.py
+      hash: md5
+      md5: 0264e088e87d9a2d4fd39624f749ee08
+      size: 2680
+    - path: src/pneumonia_segmentation/pipeline/stage6_evaluation.py
+      hash: md5
+      md5: 4d721b5a7931438ffb60b9824de3560c
+      size: 1318
+    params:
+      params.yaml:
+        evaluation_params.batch_size: 8
+        evaluation_params.image_size: 256
+        evaluation_params.is_augmentation: false
+        evaluation_params.threshold: 0.5
+        evaluation_params.workers: 4
+    outs:
+    - path: artifacts/evaluation
+      hash: md5
+      md5: 8d184b850a4fc489013de130bf2b74e2.dir
+      size: 427
+      nfiles: 8
+  onnx:
+    cmd: python src/pneumonia_segmentation/pipeline/stage5_onnx.py
+    deps:
+    - path: artifacts/training
+      hash: md5
+      md5: 774287ed4b9e8dea65f4d397a48e0a50.dir
+      size: 11393017331
+      nfiles: 64
+    - path: config/config.yaml
+      hash: md5
+      md5: 925f718cf96ffe53c0c8a9bfa367f53e
+      size: 634
+    - path: src/pneumonia_segmentation/components/onnx.py
+      hash: md5
+      md5: eaf441a39b706b31420bdeda0f383a79
+      size: 3031
+    - path: src/pneumonia_segmentation/pipeline/stage5_onnx.py
+      hash: md5
+      md5: 6e81ca82c5f62ac7889586a58634b8dd
+      size: 880
+    params:
+      params.yaml:
+        onnx_params.image_size: 256
+    outs:
+    - path: artifacts/onnx
+      hash: md5
+      md5: 3b687588102acb734ce6965b1bee7715.dir
+      size: 832048068
+      nfiles: 16
+  tensorRT:
+    cmd: python src/pneumonia_segmentation/pipeline/stage8_tensorRT.py
+    deps:
+    - path: config/config.yaml
+      hash: md5
+      md5: c28598b289a93d6eb14db3e46d19010c
+      size: 742
+      isexec: true
+    - path: params.yaml
+      hash: md5
+      md5: 2e98ceeeef84d2a6d3db8d34408d211d
+      size: 960
+      isexec: true
+    - path: src/pneumonia_segmentation/components/tensorRT.py
+      hash: md5
+      md5: 88f056ee57659f89f7bb67ec9e7f6b99
+      size: 3941
+      isexec: true
+    - path: src/pneumonia_segmentation/pipeline/stage8_tensorRT.py
+      hash: md5
+      md5: 2f17c18858e530e66cebf6a6cf0f206e
+      size: 866
+      isexec: true
+    params:
+      params.yaml:
+        tensorRT_params.image_size: 256
+    outs:
+    - path: artifacts/tensorRT
+      hash: md5
+      md5: e80f2cb3c4708570f4785bc79b8953f7.dir
+      size: 227313020
+      nfiles: 1

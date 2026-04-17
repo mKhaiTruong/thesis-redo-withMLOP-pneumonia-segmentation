@@ -1,0 +1,143 @@
+stages:
+  data_ingestion:
+    cmd: python src/pneumonia_segmentation/pipeline/stage1_data_ingestion.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage1_data_ingestion.py
+      - src/pneumonia_segmentation/components/data_ingestion.py
+      - config/config.yaml
+    outs:
+      - artifacts/data_ingestion/COVID-19_CT_SCANS
+
+  data_transformation:
+    cmd: python src/pneumonia_segmentation/pipeline/stage2_data_transformation.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage2_data_transformation.py
+      - src/pneumonia_segmentation/components/data_transformation.py
+      - config/config.yaml
+      - artifacts/data_ingestion/COVID-19_CT_SCANS
+    params:
+      - params.yaml:
+          - data_transformation_params.image_size
+          - data_transformation_params.skip_background_ratio
+          - data_transformation_params.slice_interval
+          - data_transformation_params.valid_size
+          - data_transformation_params.infer_size
+    outs:
+      - artifacts/data_transformation/infer
+      - artifacts/data_transformation/train
+      - artifacts/data_transformation/valid
+
+  data_drift:
+    cmd: python src/pneumonia_segmentation/pipeline/stage3_data_drift.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage3_data_drift.py
+      - src/pneumonia_segmentation/components/data_drift_detector.py
+      - config/config.yaml
+      - artifacts/data_transformation/train
+    params:
+      - params.yaml:
+          - data_drift_params.drift_threshold
+          - data_drift_params.n_bins
+          - data_drift_params.max_samples
+          - data_drift_params.seed
+    outs:
+      - artifacts/data_drift/drift_report.json:
+          cache: false
+
+  prepare_base_model:
+    cmd: python src/pneumonia_segmentation/pipeline/stage4_prepare_base_model.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage4_prepare_base_model.py
+      - src/pneumonia_segmentation/components/prepare_base_model.py
+      - config/config.yaml
+    params:
+      - params.yaml:
+          - prepare_base_model_params.model_name
+          - prepare_base_model_params.encoder
+          - prepare_base_model_params.encoder_weights
+          - prepare_base_model_params.classes
+          - prepare_base_model_params.activation
+    outs:
+      - artifacts/prepare_base_model
+
+  training:
+    cmd: python src/pneumonia_segmentation/pipeline/stage5_training.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage5_training.py
+      - src/pneumonia_segmentation/components/training.py
+      - config/config.yaml
+      - artifacts/data_transformation/train
+      - artifacts/data_transformation/valid
+      - artifacts/data_drift
+      - artifacts/prepare_base_model
+    params:
+      - params.yaml:
+          - training_params.lr
+          - training_params.batch_size
+          - training_params.decay
+          - training_params.patience
+          - training_params.start_epoch
+          - training_params.epochs
+          - training_params.workers
+          - training_params.seed
+          - training_params.image_size
+          - training_params.is_augmentation
+          - training_params.metric_mode
+          - training_params.loss_function
+          - training_params.lr_scheduler
+          - training_params.alpha
+          - training_params.gamma
+    outs:
+      - artifacts/training:
+          cache: false
+          persist: true
+  onnx:
+    cmd: python src/pneumonia_segmentation/pipeline/stage6_onnx.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage6_onnx.py
+      - src/pneumonia_segmentation/components/onnx.py
+      - config/config.yaml
+      - artifacts/training
+    params:
+      - params.yaml:
+          - onnx_params.image_size
+    outs:
+      - artifacts/onnx:
+          cache: false
+          persist: true
+
+  tensorRT:
+    cmd: python src/pneumonia_segmentation/pipeline/stage8_tensorRT.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage8_tensorRT.py
+      - src/pneumonia_segmentation/components/tensorRT.py
+      - config/config.yaml
+      - params.yaml
+    params:
+      - params.yaml:
+          - tensorRT_params.image_size
+    outs:
+      - artifacts/tensorRT:
+          cache: false
+          persist: true
+  
+  evaluation:
+    cmd: python src/pneumonia_segmentation/pipeline/stage7_evaluation.py
+    deps:
+      - src/pneumonia_segmentation/pipeline/stage7_evaluation.py
+      - src/pneumonia_segmentation/components/evaluation.py
+      - config/config.yaml
+      - artifacts/data_transformation/infer
+      - artifacts/onnx
+      - artifacts/tensorRT
+    params:
+      - params.yaml:
+          - evaluation_params.batch_size
+          - evaluation_params.workers
+          - evaluation_params.image_size
+          - evaluation_params.is_augmentation
+          - evaluation_params.threshold
+    outs:
+      - artifacts/evaluation:
+          cache: false
+          persist: true
