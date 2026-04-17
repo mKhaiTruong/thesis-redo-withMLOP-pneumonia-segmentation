@@ -36,11 +36,10 @@ class ConfigurationManager:
         
         sources = []
         for entry in raw.split(","):
-            name, source_type, ingestion_type, source = entry.strip().split(":")
+            name, source_type, source = entry.strip().split(":")
             sources.append({
                 "name": name,
                 "source_type": source_type,
-                "ingestion_type": ingestion_type,
                 "source": source
             })
         return sources
@@ -56,7 +55,7 @@ class ConfigurationManager:
         for s in sources:
             configs.append(DataIngestionConfig(
                 root_dir        = config.root_dir,
-                ingestion_type  = s["ingestion_type"],
+                source_type     = s["source_type"],
                 source          = s["source"],
                 name            = s["name"],
             ))
@@ -73,7 +72,7 @@ class ConfigurationManager:
         data_dirs = [
             {
                 "path": Path(self.config.data_ingestion_config.root_dir) / s["name"],
-                "source_type": s["source_type"]
+                "name": s["name"]
             }
             for s in sources
         ]

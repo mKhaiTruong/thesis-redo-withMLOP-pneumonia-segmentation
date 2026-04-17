@@ -8,7 +8,7 @@ class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config  = config
         self.adapter = IngestionAdapterFactory.create_adapter(
-            self.config.ingestion_type, self.config.source
+            self.config.source_type, self.config.source
         )
         
     def fetch_data(self) -> None:

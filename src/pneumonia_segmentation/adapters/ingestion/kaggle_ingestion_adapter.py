@@ -6,7 +6,7 @@ load_dotenv()
 
 from pneumonia_segmentation import logging
 from pneumonia_segmentation.exception import CustomException
-from pneumonia_segmentation.adapters import BaseDataIngestionAdapter
+from pneumonia_segmentation.adapters.ingestion import BaseDataIngestionAdapter
 
 class KaggleIngestionAdapter(BaseDataIngestionAdapter):
     def __init__(self, dataset: str):

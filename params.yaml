@@ -15,8 +15,8 @@ data_drift_params:
 prepare_base_model_params:
   model_architecture: "Unet"
   library: "segmentation_models_pytorch"
-  model_name: "manet"
-  encoder: "resnet34"
+  model_name: "segformer"
+  encoder: "mit_b2"
   encoder_weights: "imagenet"
   classes: 1
   activation: "None"

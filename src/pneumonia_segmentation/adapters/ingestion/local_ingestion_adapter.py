@@ -1,7 +1,7 @@
 import os, shutil, zipfile
 
 from pneumonia_segmentation import logging
-from pneumonia_segmentation.adapters import BaseDataIngestionAdapter
+from pneumonia_segmentation.adapters.ingestion import BaseDataIngestionAdapter
 
 class LocalIngestionAdapter(BaseDataIngestionAdapter):
     def __init__(self, src: str):

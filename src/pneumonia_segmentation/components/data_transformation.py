@@ -11,7 +11,7 @@ class DataTransformation:
     def __init__(self, config: DataTransformationConfig):
         self.config   = config
         self.adapters = [
-            TransformationAdapterFactory.get_adapter(d["source_type"], d["path"])
+            TransformationAdapterFactory.get_adapter(d["name"], d["path"])
             for d in self.config.data_dirs
         ]
     

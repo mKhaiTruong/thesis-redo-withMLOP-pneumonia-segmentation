@@ -5,10 +5,10 @@ from typing import Optional
 # Stage 1: Data Ingestion
 @dataclass(frozen=True)
 class DataIngestionConfig:
-    root_dir:       Path
-    ingestion_type: str            
-    source:         str     
-    name:           str
+    root_dir:    Path
+    source_type: str            
+    source:      str     
+    name:        str
 
 # Stage 2: Data Transformation  
 @dataclass(frozen=True)
