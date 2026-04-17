@@ -1,0 +1,14 @@
+[project]
+name = "pnseg-transformation"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "nibabel",
+    "opencv-python-headless",
+    "numpy",
+    "tqdm",
+    "python-dotenv"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

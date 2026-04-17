@@ -20,6 +20,28 @@ list_of_files = [
     f"src/{proj_name}/pipeline/__init__.py",    # training & prediction flow
     f"src/{proj_name}/entity/__init__.py",      # config dataclasses
     
+    # ------------- MICROSERVICES ----------------------------
+    f"packages/core/pyproject.toml",  
+    f"packages/core/src/core/__init__.py",
+    f"packages/core/src/core/exception.py",
+    f"packages/core/src/core/logging.py",
+    f"packages/core/src/core/utils",
+    f"packages/core/src/core/constants",
+    
+    f"packages/ingestion/pyproject.toml",
+    f"packages/ingestion/src/ingestion/__init__.py",
+    f"packages/ingestion/src/ingestion/adapters",
+    f"packages/ingestion/src/ingestion/components",
+    f"packages/ingestion/src/ingestion/config",
+    f"packages/ingestion/src/ingestion/pipeline",
+    
+    f"services/ingestion/main.py",
+    f"services/ingestion/Dockerfile",
+    
+    f"services/training/main.py",
+    f"services/training/Dockerfile",
+    
+    
     "tests/__init__.py",
 
     "dvc.yaml",
