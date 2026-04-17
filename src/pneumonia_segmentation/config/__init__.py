@@ -29,30 +29,41 @@ class ConfigurationManager:
         self.params = read_yaml(params_filepath)
 
         create_directories([self.config.artifacts_root])
-    
-    def get_data_ingestion_config(self) -> DataIngestionConfig:
-        config = self.config.data_ingestion_config
-        create_directories([config.root_dir])
-
-        data_ingestion_config = DataIngestionConfig(
-            root_dir    = config.root_dir,
-            source_type = os.getenv("DATA_SOURCE_TYPE", "LOCAL"),
-            source      = os.getenv("DATA_SOURCE"),
-            name        = os.getenv("DATA_SOURCE_NAME"),
-        )
-
-        return data_ingestion_config
-
-    # Data Transformation
+        
+    # --------------- private functions for ingestion and transformation ---------------
     def _parse_data_sources(self):
         raw = os.getenv("DATA_SOURCES", "")
         
         sources = []
         for entry in raw.split(","):
-            name, source_type = entry.strip().split(":")
-            sources.append({"name": name, "source_type": source_type})
+            name, source_type, ingestion_type, source = entry.strip().split(":")
+            sources.append({
+                "name": name,
+                "source_type": source_type,
+                "ingestion_type": ingestion_type,
+                "source": source
+            })
         return sources
+    # -------------------------------------------------------------------------------------
+    
+    # Data Ingestion -----
+    def get_data_ingestion_config(self) -> DataIngestionConfig:
+        config = self.config.data_ingestion_config
+        create_directories([config.root_dir])
+        
+        sources = self._parse_data_sources()
+        configs = []
+        for s in sources:
+            configs.append(DataIngestionConfig(
+                root_dir        = config.root_dir,
+                ingestion_type  = s["ingestion_type"],
+                source          = s["source"],
+                name            = s["name"],
+            ))
 
+        return configs
+
+    # Data Transformation -----
     def get_data_transformation_config(self) -> DataTransformationConfig:
         config = self.config.data_transformation_config
         params = self.params.data_transformation_params
@@ -82,6 +93,7 @@ class ConfigurationManager:
 
         return data_transformation_config
 
+    # Data Drift
     def get_data_drift_config(self) -> DataDriftConfig:
         config = self.config.data_drift_config
         params = self.params.data_drift_params

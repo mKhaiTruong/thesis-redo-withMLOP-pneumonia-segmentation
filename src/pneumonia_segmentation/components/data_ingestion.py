@@ -2,25 +2,14 @@ import os, sys
 from pneumonia_segmentation import logging
 from pneumonia_segmentation.exception import CustomException
 from pneumonia_segmentation.entity.entity_config import DataIngestionConfig
-from pneumonia_segmentation.adapters import BaseDataIngestionAdapter
-from pneumonia_segmentation.adapters.local_ingestion_adapter import LocalIngestionAdapter
-from pneumonia_segmentation.adapters.kaggle_ingestion_adapter import KaggleIngestionAdapter
+from pneumonia_segmentation.adapters.factory import IngestionAdapterFactory
 
 class DataIngestion:
     def __init__(self, config: DataIngestionConfig):
         self.config  = config
-        self.adapter = self._get_ingestion_adapter()
-    
-    def _get_ingestion_adapter(self) -> BaseDataIngestionAdapter:
-        source_type = self.config.source_type
-        source      = self.config.source
-        
-        if source_type == "LOCAL":
-            return LocalIngestionAdapter(source)
-        elif source_type == "KAGGLE":
-            return KaggleIngestionAdapter(source)
-        else:
-            raise ValueError(f"Source type {source_type} not supported")
+        self.adapter = IngestionAdapterFactory.create_adapter(
+            self.config.ingestion_type, self.config.source
+        )
         
     def fetch_data(self) -> None:
         try: 

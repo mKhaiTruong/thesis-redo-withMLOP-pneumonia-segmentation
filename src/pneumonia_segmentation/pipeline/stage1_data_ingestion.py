@@ -11,9 +11,10 @@ class DataIngestionPipeline:
         
     def main(self):
         cfg_manager = ConfigurationManager()
-        data_ingestion_config = cfg_manager.get_data_ingestion_config()
-        data_ingestion = DataIngestion(config=data_ingestion_config)
-        data_ingestion.fetch_data()
+        data_ingestion_configs = cfg_manager.get_data_ingestion_config()
+        for config in data_ingestion_configs:
+            data_ingestion = DataIngestion(config=config)
+            data_ingestion.fetch_data()
 
 
 if __name__ == "__main__":
