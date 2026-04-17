@@ -13,23 +13,23 @@ from pneumonia_segmentation.pipeline.stage6_onnx import OnnxPipeline
 from pneumonia_segmentation.pipeline.stage8_evaluation import EvaluationPipeline
 
 if __name__ == "__main__":
-        STAGE_NAME = "Data Ingestion Stage"
-        try:
-                logging.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-                data_ingestion = DataIngestionPipeline()
-                data_ingestion.main()
-                logging.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
-        except Exception as e:
-                raise CustomException(e, sys)
-
-        # STAGE_NAME = "Data Transformation Stage"
+        # STAGE_NAME = "Data Ingestion Stage"
         # try:
         #         logging.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-        #         data_transformation = DataTransformationPipeline()
-        #         data_transformation.main()
+        #         data_ingestion = DataIngestionPipeline()
+        #         data_ingestion.main()
         #         logging.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
         # except Exception as e:
         #         raise CustomException(e, sys)
+
+        STAGE_NAME = "Data Transformation Stage"
+        try:
+                logging.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+                data_transformation = DataTransformationPipeline()
+                data_transformation.main()
+                logging.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+        except Exception as e:
+                raise CustomException(e, sys)
         
         # STAGE_NAME = "Data drift Stage"
         # try:

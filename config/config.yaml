@@ -5,8 +5,6 @@ data_ingestion_config:
 
 data_transformation_config:
   root_dir: artifacts/data_transformation
-  source_type: "NIFTI"
-  data_dir: artifacts/data_ingestion/COVID-19_CT_SCANS
   out_train_dir: artifacts/data_transformation/train
   out_valid_dir: artifacts/data_transformation/valid
   out_infer_dir: artifacts/data_transformation/infer

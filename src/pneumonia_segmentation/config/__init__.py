@@ -43,16 +43,33 @@ class ConfigurationManager:
 
         return data_ingestion_config
 
+    # Data Transformation
+    def _parse_data_sources(self):
+        raw = os.getenv("DATA_SOURCES", "")
+        
+        sources = []
+        for entry in raw.split(","):
+            name, source_type = entry.strip().split(":")
+            sources.append({"name": name, "source_type": source_type})
+        return sources
+
     def get_data_transformation_config(self) -> DataTransformationConfig:
         config = self.config.data_transformation_config
         params = self.params.data_transformation_params
-
         create_directories([config.root_dir])
-
+        
+        sources   = self._parse_data_sources()
+        data_dirs = [
+            {
+                "path": Path(self.config.data_ingestion_config.root_dir) / s["name"],
+                "source_type": s["source_type"]
+            }
+            for s in sources
+        ]
+        
         data_transformation_config = DataTransformationConfig(
             root_dir               = config.root_dir,
-            source_type            = config.source_type,
-            data_dir               = config.data_dir,
+            data_dirs              = data_dirs,
             out_train_dir          = config.out_train_dir,
             out_valid_dir          = config.out_valid_dir,
             out_infer_dir          = config.out_infer_dir,
