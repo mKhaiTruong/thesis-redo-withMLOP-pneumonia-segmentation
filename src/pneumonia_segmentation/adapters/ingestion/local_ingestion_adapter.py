@@ -1,4 +1,4 @@
-import os, sys, shutil, zipfile
+import os, shutil, zipfile
 
 from pneumonia_segmentation import logging
 from pneumonia_segmentation.adapters import BaseDataIngestionAdapter

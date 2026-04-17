@@ -2,7 +2,7 @@ import os, sys
 from pneumonia_segmentation import logging
 from pneumonia_segmentation.exception import CustomException
 from pneumonia_segmentation.entity.entity_config import DataIngestionConfig
-from pneumonia_segmentation.adapters.factory import IngestionAdapterFactory
+from pneumonia_segmentation.adapters.factories import IngestionAdapterFactory
 
 class DataIngestion:
     def __init__(self, config: DataIngestionConfig):

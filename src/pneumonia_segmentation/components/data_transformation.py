@@ -5,7 +5,7 @@ from pneumonia_segmentation.exception import CustomException
 
 from pneumonia_segmentation.utils.covid_ct_processing import *
 from pneumonia_segmentation.entity.entity_config import DataTransformationConfig
-from pneumonia_segmentation.adapters.factory import TransformationAdapterFactory
+from pneumonia_segmentation.adapters.factories import TransformationAdapterFactory
 
 class DataTransformation:
     def __init__(self, config: DataTransformationConfig):

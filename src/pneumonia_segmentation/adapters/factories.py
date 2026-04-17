@@ -1,6 +1,6 @@
-from pneumonia_segmentation.adapters.local_ingestion_adapter import LocalIngestionAdapter
-from pneumonia_segmentation.adapters.kaggle_ingestion_adapter import KaggleIngestionAdapter
-from pneumonia_segmentation.adapters.nifti_adapter import NiftiAdapter
+from pneumonia_segmentation.adapters.ingestion.local_ingestion_adapter import LocalIngestionAdapter
+from pneumonia_segmentation.adapters.ingestion.kaggle_ingestion_adapter import KaggleIngestionAdapter
+from pneumonia_segmentation.adapters.transformation.nifti_adapter import NiftiAdapter
 
 class IngestionAdapterFactory:
     _adapters = {

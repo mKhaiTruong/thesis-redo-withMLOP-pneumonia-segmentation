@@ -4,7 +4,7 @@ from pneumonia_segmentation import logging
 from pneumonia_segmentation.exception import CustomException
 
 from pneumonia_segmentation.pipeline.stage1_data_ingestion import DataIngestionPipeline
-# from pneumonia_segmentation.pipeline.stage2_data_transformation import DataTransformationPipeline
+from pneumonia_segmentation.pipeline.stage2_data_transformation import DataTransformationPipeline
 # from pneumonia_segmentation.pipeline.stage3_data_drift import DataDriftPipeline
 # from pneumonia_segmentation.pipeline.stage4_prepare_base_model import PrepareBaseModelPipeline
 # from pneumonia_segmentation.pipeline.stage5_training import TrainingPipeline
@@ -22,14 +22,14 @@ if __name__ == "__main__":
         except Exception as e:
                 raise CustomException(e, sys)
 
-        # STAGE_NAME = "Data Transformation Stage"
-        # try:
-        #         logging.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
-        #         data_transformation = DataTransformationPipeline()
-        #         data_transformation.main()
-        #         logging.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
-        # except Exception as e:
-        #         raise CustomException(e, sys)
+        STAGE_NAME = "Data Transformation Stage"
+        try:
+                logging.info(f">>>>>> stage {STAGE_NAME} started <<<<<<")
+                data_transformation = DataTransformationPipeline()
+                data_transformation.main()
+                logging.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<\n\nx==========x")
+        except Exception as e:
+                raise CustomException(e, sys)
         
         # STAGE_NAME = "Data drift Stage"
         # try:
