@@ -12,4 +12,6 @@ COPY services/orchestrator ./services/orchestrator
 COPY config ./config
 COPY params.yaml .
 
+ENV PREFECT_API_URL=http://prefect:4200/api
+
 CMD ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "7860"]

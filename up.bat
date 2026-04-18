@@ -1,0 +1,1 @@
+docker compose up --build ingestion transformation data_drift prefect orchestrator
