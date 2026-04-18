@@ -72,6 +72,17 @@ def root():
 def health():
     return {"status": "ok", "model": "onnx-int8"}
 
+@app.get("/debug")
+async def debug():
+    import psutil
+    process = psutil.Process()
+    return {
+        "ram_percent": psutil.virtual_memory().percent,
+        "ram_used_mb": psutil.virtual_memory().used / 1024 / 1024,
+        "ram_total_mb": psutil.virtual_memory().total / 1024 / 1024,
+        "process_ram_mb": process.memory_info().rss / 1024 / 1024,
+    }
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:

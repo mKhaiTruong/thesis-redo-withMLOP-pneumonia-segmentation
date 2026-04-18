@@ -1,25 +1,25 @@
 services:
-  # ingestion:
-  #   build:
-  #     context: .
-  #     dockerfile: services/ingestion/Dockerfile
-  #   ports:
-  #     - "7860:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
+  ingestion:
+    build:
+      context: .
+      dockerfile: services/ingestion/Dockerfile
+    ports:
+      - "7860:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
 
-  # transformation:
-  #   build:
-  #     context: .
-  #     dockerfile: services/transformation/Dockerfile
-  #   ports:
-  #     - "7860:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
-  #   depends_on:
-  #     - ingestion
+  transformation:
+    build:
+      context: .
+      dockerfile: services/transformation/Dockerfile
+    ports:
+      - "7861:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - ingestion
 
   app:
     build: .
