@@ -127,6 +127,10 @@ async def predict(file: UploadFile = File(...)):
         )
     except Exception as e:
         import traceback
-        error_detail = traceback.format_exc()
-        print(error_detail)
-        raise HTTPException(status_code=500, detail=error_detail)
+        
+        if "System Overloaded" in str(e):
+            raise HTTPException(
+                status_code=503,
+                detail="Server temporarily overloaded, please retry in a few seconds"
+            )
+        raise HTTPException(status_code=500, detail=traceback.format_exc())

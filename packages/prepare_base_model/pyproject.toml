@@ -1,0 +1,12 @@
+[project]
+name = "pnseg-prepare_base_model"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "torch",
+    "segmentation_models_pytorch",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["prepare_base_model*"]

@@ -6,8 +6,6 @@ dependencies = [
     "kaggle",
     "python-dotenv",
     "joblib",
-    "fastapi",
-    "uvicorn"
 ]
 
 [tool.setuptools.packages.find]

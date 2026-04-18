@@ -10,6 +10,12 @@ dependencies = [
     "python-box",
     "ensure",
     "joblib",
+    "onnxruntime",
+    "numpy",
+    "mlflow",
+    "fastapi",
+    "uvicorn",
+    "opencv-python-headless",
 ]
 
 [tool.setuptools.packages.find]

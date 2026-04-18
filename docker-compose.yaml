@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: services/ingestion/Dockerfile
     ports:
-      - "7860:7860"
+      - "7861:7860"
     env_file: .env
     volumes:
       - ./artifacts:/app/artifacts
@@ -14,12 +14,34 @@ services:
       context: .
       dockerfile: services/transformation/Dockerfile
     ports:
-      - "7861:7860"
+      - "7862:7860"
     env_file: .env
     volumes:
       - ./artifacts:/app/artifacts
     depends_on:
       - ingestion
+
+  data_drift:
+    build:
+      context: .
+      dockerfile: services/data_drift/Dockerfile
+    ports:
+      - "7863:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - transformation
+
+  prepare_base_model:
+    build:
+      context: .
+      dockerfile: services/prepare_base_model/Dockerfile
+    ports:
+      - "7864:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
 
   app:
     build: .

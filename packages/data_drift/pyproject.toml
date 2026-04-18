@@ -1,15 +1,13 @@
 [project]
-name = "pnseg-transformation"
+name = "pnseg-data_drift"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
-    "nibabel",
-    "opencv-python-headless",
     "numpy",
-    "tqdm",
+    "mlflow",
     "python-dotenv",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["transformation*"]
+include = ["data_drift*"]
