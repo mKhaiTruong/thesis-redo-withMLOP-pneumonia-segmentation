@@ -1,0 +1,13 @@
+[project]
+name = "pnseg-onnx_export"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "segmentation-models-pytorch",
+    "onnx",
+    "onnxruntime",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["onnx_export*"]

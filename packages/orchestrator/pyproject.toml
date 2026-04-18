@@ -1,0 +1,11 @@
+[project]
+name = "pnseg-orchestrator"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "httpx",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["orchestrator*"]

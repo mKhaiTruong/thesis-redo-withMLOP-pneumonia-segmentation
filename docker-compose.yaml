@@ -1,37 +1,37 @@
 services:
-  # ingestion:
-  #   build:
-  #     context: .
-  #     dockerfile: services/ingestion/Dockerfile
-  #   ports:
-  #     - "7861:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
+  ingestion:
+    build:
+      context: .
+      dockerfile: services/ingestion/Dockerfile
+    ports:
+      - "7861:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
 
-  # transformation:
-  #   build:
-  #     context: .
-  #     dockerfile: services/transformation/Dockerfile
-  #   ports:
-  #     - "7862:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
-  #   depends_on:
-  #     - ingestion
+  transformation:
+    build:
+      context: .
+      dockerfile: services/transformation/Dockerfile
+    ports:
+      - "7862:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - ingestion
 
-  # data_drift:
-  #   build:
-  #     context: .
-  #     dockerfile: services/data_drift/Dockerfile
-  #   ports:
-  #     - "7863:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
-  #   depends_on:
-  #     - transformation
+  data_drift:
+    build:
+      context: .
+      dockerfile: services/data_drift/Dockerfile
+    ports:
+      - "7863:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+    depends_on:
+      - transformation
 
   # prepare_base_model:
   #   build:
@@ -62,18 +62,48 @@ services:
   #   depends_on:
   #     - transformation
 
-  app:
-    build: .
-    image: pneumonia-seg
+  # onnx_export:
+  #   build:
+  #     context: .
+  #     dockerfile: services/onnx_export/Dockerfile
+  #   ports:
+  #     - "7866:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: services/orchestrator/Dockerfile
     ports:
-      - "7860:7860"
-    env_file:
-      - .env
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: "1.0"
+      - "7867:7860"
+    env_file: .env
+    depends_on:
+      - ingestion
+      - transformation
+      - data_drift
+
+  # --------------------------- INFERENCE ---------------------------
+  # app:
+  #   build: .
+  #   image: pneumonia-seg
+  #   ports:
+  #     - "7860:7860"
+  #   env_file:
+  #     - .env
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2g
+  #         cpus: "1.0"
 
   # prometheus:
   #   image: prom/prometheus:latest

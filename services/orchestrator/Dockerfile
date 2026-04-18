@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY packages/core ./packages/core
+RUN pip install -e ./packages/core
+
+COPY packages/orchestrator ./packages/orchestrator
+RUN pip install -e ./packages/orchestrator
+
+COPY services/orchestrator ./services/orchestrator
+COPY config ./config
+COPY params.yaml .
+
+CMD ["uvicorn", "services.orchestrator.main:app", "--host", "0.0.0.0", "--port", "7860"]
