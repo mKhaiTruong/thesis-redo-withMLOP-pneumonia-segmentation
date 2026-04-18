@@ -1,29 +1,29 @@
-import os, sys, time, torch, json
+import time, torch, json, mlflow
 import torch.nn as nn
 import segmentation_models_pytorch as smp
 
-from pneumonia_segmentation import logging
-from pneumonia_segmentation.exception import CustomException
-
-from pneumonia_segmentation.utils.data_loaders import get_dataloaders
-from pneumonia_segmentation.utils.helpers.optimizer import Optimizer
-from pneumonia_segmentation.utils.helpers.early_stopper import EarlyStopper
-from pneumonia_segmentation.utils.helpers.lr_scheduler import LR_Scheduler
-from pneumonia_segmentation.utils.engine.engine import train_one_epoch, validate
+from core.logging import logger
+from training import TrainingConfig
+from training.utils import get_device
+from training.utils.data_loaders import get_dataloaders
+from training.utils.helpers.optimizer import Optimizer
+from training.utils.helpers.early_stopper import EarlyStopper
+from training.utils.helpers.lr_scheduler import LR_Scheduler
+from training.utils.engine.engine import train_one_epoch, validate
 
 MODEL_MAP = {
     "unet":        smp.Unet,
     "unetpp":      smp.UnetPlusPlus,
     "deeplabv3":   smp.DeepLabV3,
-    "deeplabv3p":  smp.DeepLabV3Plus,
-    "manet":       smp.MAnet,
+    "segformer":   smp.Segformer,
+    "manet":       smp.MAnet
 }
 
 class Training:
     def __init__(self, config: TrainingConfig):
         self.config = config
         self.best_iou = 0.0 if config.metric.metric_mode == "max" else float('inf')
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = get_device()
         
         self.loaders        = get_dataloaders(self.config)
         self.model          = self._get_model()
@@ -61,7 +61,17 @@ class Training:
     # ── training loop ─────────────────────────────────────────
     
     def train(self):
-        for epoch in range(self.config.train.start_epoch, self.config.train.epochs):
+        mlflow.log_params({
+            "lr"        : self.config.optimizer.lr,
+            "batch_size": self.config.train.batch_size,
+            "epochs"    : self.config.train.epochs,
+            "loss_function": self.config.metric.loss_function,
+        })
+        mlflow.log_param("model_name", self.config.model.model_name)
+        mlflow.log_param("encoder", self.config.model.encoder)
+        
+        self.start_epoch = self.config.train.start_epoch
+        for epoch in range(self.start_epoch, self.config.train.epochs):
             start = time.time()
             train_loss = train_one_epoch(
                 self.model, self.loaders['train'], 
@@ -71,13 +81,19 @@ class Training:
             
             if epoch % 2 == 0:
                 valid_loss, mean_iou = self._run_validation(epoch)
+                
+                mlflow.log_metrics({
+                    "train_loss": train_loss,
+                    "valid_loss": valid_loss,
+                    "iou": mean_iou,
+                }, step=epoch)
                 elapsed = time.time() - start
                 self._log_epoch(epoch, elapsed, train_loss, valid_loss, mean_iou)
 
                 score = -0.25*train_loss -0.25*valid_loss + 0.5*mean_iou
                 self.early_stopper(score)
                 if self.early_stopper.early_stop:
-                    logging.info("Early stopping triggered.")
+                    logger.info("Early stopping triggered.")
                     break
 
         torch.save(self.model.state_dict(), self.config.model.latest_model_dir)
@@ -128,7 +144,7 @@ class Training:
                 self.model.state_dict(), 
                 self.config.model.best_model_dir
             )
-        logging.info(f"Best model updated — IOU: {self.best_iou:.4f}")
+            logger.info(f"Best model updated — IOU: {self.best_iou:.4f}")
         
     def save_run_info(self):
         m = self.config.model
@@ -143,14 +159,30 @@ class Training:
         
         with open(m.run_info_dir, "w") as f:
             json.dump(run_info, f, indent=4)
-        logging.info(f"Run info saved at {m.run_info_dir}")
+        logger.info(f"Run info saved at {m.run_info_dir}")
         
     # ── logging ──────────────────────────────────────────────
     
     def _log_epoch(self, epoch: int, elapsed: float, train_loss, valid_loss, mean_iou):
-        logging.info(
+        logger.info(
             f"Epoch {epoch} | {elapsed / 60:.2f} min | "
             f"Train Loss {train_loss:.4f} | "
             f"Valid Loss {valid_loss:.4f} | "
             f"IOU {mean_iou:.4f} | Best {self.best_iou:.4f}"
         )
+        
+# Sanity check
+if __name__=="__main__":
+    from pneumonia_segmentation.config import ConfigurationManager
+    
+    cfg_manager = ConfigurationManager()
+    training = Training(cfg_manager.get_training_config())
+    loader = training.loaders['train']
+    batch = next(iter(loader))
+    images, masks = batch['image'], batch['mask']
+
+    print(images.shape)   # expect (B, 3, H, W)
+    print(masks.shape)    # expect (B, 1, H, W) 
+    print(masks.unique()) # expect tensor([0., 1.])
+    
+    training.train()

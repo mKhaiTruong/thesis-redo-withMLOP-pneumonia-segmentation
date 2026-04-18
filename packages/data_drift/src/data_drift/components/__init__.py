@@ -43,5 +43,7 @@ class DataDriftDetector:
         
         return {
             "drift_score": float(score),
-            "is_drift": score > self.config.metric.drift_threshold
+            "is_drift": bool(score > self.config.metric.drift_threshold),
+            "n_images": len(img_paths),
+            "threshold": float(self.config.metric.drift_threshold)
         }

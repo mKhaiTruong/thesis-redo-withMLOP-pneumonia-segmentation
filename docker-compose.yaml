@@ -1,47 +1,66 @@
 services:
-  ingestion:
-    build:
-      context: .
-      dockerfile: services/ingestion/Dockerfile
-    ports:
-      - "7861:7860"
-    env_file: .env
-    volumes:
-      - ./artifacts:/app/artifacts
+  # ingestion:
+  #   build:
+  #     context: .
+  #     dockerfile: services/ingestion/Dockerfile
+  #   ports:
+  #     - "7861:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
 
-  transformation:
-    build:
-      context: .
-      dockerfile: services/transformation/Dockerfile
-    ports:
-      - "7862:7860"
-    env_file: .env
-    volumes:
-      - ./artifacts:/app/artifacts
-    depends_on:
-      - ingestion
+  # transformation:
+  #   build:
+  #     context: .
+  #     dockerfile: services/transformation/Dockerfile
+  #   ports:
+  #     - "7862:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
+  #   depends_on:
+  #     - ingestion
 
-  data_drift:
-    build:
-      context: .
-      dockerfile: services/data_drift/Dockerfile
-    ports:
-      - "7863:7860"
-    env_file: .env
-    volumes:
-      - ./artifacts:/app/artifacts
-    depends_on:
-      - transformation
+  # data_drift:
+  #   build:
+  #     context: .
+  #     dockerfile: services/data_drift/Dockerfile
+  #   ports:
+  #     - "7863:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
+  #   depends_on:
+  #     - transformation
 
-  prepare_base_model:
-    build:
-      context: .
-      dockerfile: services/prepare_base_model/Dockerfile
-    ports:
-      - "7864:7860"
-    env_file: .env
-    volumes:
-      - ./artifacts:/app/artifacts
+  # prepare_base_model:
+  #   build:
+  #     context: .
+  #     dockerfile: services/prepare_base_model/Dockerfile
+  #   ports:
+  #     - "7864:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
+
+  # training:
+  #   build:
+  #     context: .
+  #     dockerfile: services/training/Dockerfile
+  #   ports:
+  #     - "7865:7860"
+  #   env_file: .env
+  #   volumes:
+  #     - ./artifacts:/app/artifacts
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   depends_on:
+  #     - transformation
 
   app:
     build: .

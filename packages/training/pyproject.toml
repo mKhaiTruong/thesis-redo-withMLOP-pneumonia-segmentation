@@ -3,7 +3,6 @@ name = "pnseg-training"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
-    "torch",
     "segmentation-models-pytorch",
     "mlflow",
     "albumentations",
@@ -11,3 +10,4 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["training*"]

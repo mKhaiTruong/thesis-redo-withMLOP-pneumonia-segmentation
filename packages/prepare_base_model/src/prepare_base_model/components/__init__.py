@@ -5,10 +5,11 @@ from core.logging import logger
 from prepare_base_model import PrepareBaseModelConfig
 
 MODEL_MAP = {
-    "unet": smp.Unet,
-    "unetpp": smp.UnetPlusPlus,
-    "deeplabv3": smp.DeepLabV3,
-    "manet": smp.MAnet
+    "unet":        smp.Unet,
+    "unetpp":      smp.UnetPlusPlus,
+    "deeplabv3":   smp.DeepLabV3,
+    "segformer":   smp.Segformer,
+    "manet":       smp.MAnet
 }
 
 class PrepareBaseModel:
