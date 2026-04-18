@@ -14,5 +14,7 @@ requirements.in
 requirements-app.in
 requirements-dev.txt
 requirements.txt
-template.py
 README.md
+template.py
+upload_to_kaggle.py
+upload_to_hf.py

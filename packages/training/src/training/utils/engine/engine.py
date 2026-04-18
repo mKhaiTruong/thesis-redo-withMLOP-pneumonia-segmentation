@@ -14,7 +14,7 @@ def train_one_epoch(model, loader, criterion, optimizer, scheduler, epoch, devic
         images, masks = input['image'], input['mask']
         images, masks = images.to(device), masks.to(device)
         
-        with autocast(device_type=device):
+        with autocast(device_type=device.type):
             loss = criterion(model(images), masks)
 
         scaler.scale(loss).backward()
@@ -66,7 +66,7 @@ def train_one_epoch_sanity_check(model, loader, criterion, optimizer, scheduler,
 
     for i in range(20):
         optimizer.zero_grad(set_to_none=True)
-        with torch.amp.autocast(device_type=device, dtype=torch.float16):
+        with torch.amp.autocast(device_type=device.type, dtype=torch.float16):
             loss = criterion(model(images), masks)
         scaler.scale(loss).backward()
         scaler.step(optimizer)

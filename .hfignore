@@ -1,2 +1,4 @@
 services/
 packages/
+upload_to_kaggle.py
+upload_to_hf.py
