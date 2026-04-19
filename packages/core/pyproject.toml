@@ -16,6 +16,7 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "opencv-python-headless",
+    "prometheus-client",
 ]
 
 [tool.setuptools.packages.find]

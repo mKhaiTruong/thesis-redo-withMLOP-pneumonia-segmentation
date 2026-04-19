@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements-app.txt .
 RUN pip install --no-cache-dir -r requirements-app.txt
 
+COPY packages/core ./packages/core
+RUN pip install -e ./packages/core
+
 COPY ./app ./app
 COPY ./src ./src
 COPY ./config ./config

@@ -51,3 +51,35 @@ evaluation_params:
 tensorRT_params:
   batch_size: 8
   image_size: 256
+
+lstm_params:
+  input_steps: 30
+  output_steps: 5
+  input_size: 4
+  hidden_size: 128
+  num_layers: 3
+  epochs: 500
+  batch_size: 32
+  lr: 0.001
+
+dqn_planner_params:
+  state_size: 20
+  action_size: 5
+  hidden_size: 128
+  lr: 0.001
+  gamma: 0.99
+  epsilon: 1.0
+  epsilon_min: 0.01
+  epsilon_decay: 0.995
+  batch_size: 64
+  target_update_freq: 100
+
+simulation_params:
+  cpu_warning: 80
+  cpu_critical: 95
+  ram_warning: 80
+  ram_critical: 95
+  latency_warning: 0.5
+  latency_critical: 1.0
+  drift_warning: 0.3
+  drift_critical: 0.5

@@ -1,10 +1,12 @@
 import sys
 from fastapi import FastAPI
 from core.exception import CustomException
+from core.prometheus_metrics import instrument_app
 from orchestrator.pipeline import OrchestratorPipeline
 
 app = FastAPI()
 pipeline = OrchestratorPipeline()
+instrument_app(app, service_name="orchestrator")
 
 @app.post("/run-pipeline")
 def run_full_pipeline():

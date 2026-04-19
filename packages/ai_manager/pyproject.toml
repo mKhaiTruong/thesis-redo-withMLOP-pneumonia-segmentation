@@ -1,0 +1,10 @@
+[project]
+name = "pnseg-ai_manager"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ai_manager*"]

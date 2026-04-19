@@ -98,32 +98,52 @@ services:
       - transformation
       - data_drift
 
+  lstm:
+    build:
+      context: .
+      dockerfile: services/lstm/Dockerfile
+    ports:
+      - "7868:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+
+  dqn:
+    build:
+      context: .
+      dockerfile: services/dqn/Dockerfile
+    ports:
+      - "7869:7860"
+    env_file: .env
+    volumes:
+      - ./artifacts:/app/artifacts
+
   # --------------------------- INFERENCE ---------------------------
-  # app:
-  #   build: .
-  #   image: pneumonia-seg
-  #   ports:
-  #     - "7860:7860"
-  #   env_file:
-  #     - .env
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 2g
-  #         cpus: "1.0"
+  app:
+    build: .
+    image: pneumonia-seg
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "1.0"
 
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   ports:
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  #   depends_on:
-  #     - app
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
 
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - prometheus
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

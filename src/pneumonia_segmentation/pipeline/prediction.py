@@ -8,6 +8,8 @@ from pneumonia_segmentation.constants import *
 from pneumonia_segmentation.config import ConfigurationManager
 from pneumonia_segmentation.components.data_drift_detector import DataDriftDetector
 
+from core.prometheus_metrics import DRIFT_SCORE, IS_DRIFT
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -108,10 +110,12 @@ class PredictionPipeline:
         score = float(norm(baseline_feat - current_feat))
         is_drift = bool(score > self.data_drift_detector.config.metric.drift_threshold)
         
+        DRIFT_SCORE.set(score)
+        IS_DRIFT.set(int(is_drift))
         drift_result = {
             "drift_score": score,
             "is_drift": is_drift
-        }      
+        }
         
         # --- STAGE 5: INFERENCE ---
         image_rgb = cv2.cvtColor(image_for_drift, cv2.COLOR_BGR2RGB)

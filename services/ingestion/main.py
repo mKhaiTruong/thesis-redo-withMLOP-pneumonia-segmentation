@@ -2,10 +2,12 @@ import sys
 from fastapi import FastAPI, BackgroundTasks
 
 from core.exception import CustomException
+from core.prometheus_metrics import instrument_app
 from ingestion.pipeline import DataIngestionPipeline
 
 app = FastAPI()
 pipeline = DataIngestionPipeline()
+instrument_app(app, service_name="ingestion")
 
 @app.post("/run-ingestion")
 def run_ingestion():

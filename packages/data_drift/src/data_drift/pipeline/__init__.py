@@ -30,8 +30,8 @@ class DataDriftPipeline:
         data_drift          = DataDriftDetector(config=data_drift_config)
         result              = data_drift.run()
         
-        if "status" in result and result["status"] == "Baseline Created":
-            logger.info("Baseline created — skipping drift analysis")
+        if "status" in result:
+            logger.info(f"Data drift status: {result['status']}")
             return
         
         report_path = Path("artifacts/data_drift/drift_report.json")

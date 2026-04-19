@@ -2,6 +2,18 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: "fastapi"
+  - job_name: "ingestion"
     static_configs:
-      - targets: ["app:7860"]
+      - targets: ["ingestion:7860"]
+
+  - job_name: "transformation"
+    static_configs:
+      - targets: ["transformation:7860"]
+
+  - job_name: "data_drift"
+    static_configs:
+      - targets: ["data_drift:7860"]
+
+  - job_name: "orchestrator"
+    static_configs:
+      - targets: ["orchestrator:7860"]

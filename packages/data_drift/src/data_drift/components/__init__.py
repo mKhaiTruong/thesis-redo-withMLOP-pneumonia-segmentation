@@ -9,22 +9,23 @@ from core.utils.data_drift_helpers import FeatureExtractor
 class DataDriftDetector:
     def __init__(self, config: DataDriftConfig):
         self.config = config
-        self.extractor = FeatureExtractor(
-            model_name=self.config.metric.model_name, 
-            device="cpu"
-        )
+        self._extractor = None
+    
+    @property
+    def extractor(self):
+        if self._extractor is None:
+            self._extractor = FeatureExtractor(
+                model_name=self.config.metric.model_name, 
+                device="cpu"
+            )
+        return self._extractor
     
     def _get_distribution(self, img_paths: list[Path]) -> np.ndarray:
-        all_features = []
         logger.info(f"Extracting features from {len(img_paths)} images...")
-        
-        for path in img_paths:
-            feat = self.extractor.extract(path)
-            all_features.append(feat)
-        
+        all_features = [self.extractor.extract(path) for path in img_paths]
+
         all_features = np.array(all_features)
-        avg_feature_vector = np.mean(all_features, axis=0)
-        return avg_feature_vector
+        return np.mean(all_features, axis=0)
     
     def run(self) -> dict:
         img_paths = sorted(list(self.config.origin_data_source.rglob("*.png")))

@@ -1,0 +1,12 @@
+[project]
+name = "pnseg-lstm"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "pandas",
+    "httpx",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["lstm*"]

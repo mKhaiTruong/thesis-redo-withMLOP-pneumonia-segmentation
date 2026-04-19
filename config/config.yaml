@@ -26,3 +26,9 @@ evaluation_config:
 
 tensorRT_config:
   root_dir: artifacts/tensorRT
+
+lstm_config:
+  root_dir: artifacts/lstm
+
+dqn_planner_config:
+  root_dir: artifacts/dqn_planner
