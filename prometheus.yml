@@ -17,3 +17,15 @@ scrape_configs:
   - job_name: "orchestrator"
     static_configs:
       - targets: ["orchestrator:7860"]
+
+  - job_name: "lstm"
+    static_configs:
+      - targets: ["lstm:7860"]
+
+  - job_name: "dqn"
+    static_configs:
+      - targets: ["dqn:7860"]
+
+  - job_name: "ai_manager"
+    static_configs:
+      - targets: ["ai_manager:7860"]

@@ -11,6 +11,7 @@ tensorrt
 segmentation_models_pytorch
 onnxruntime
 onnx
+locust
 
 pywin32 ; platform_system == "Windows"
 pywinpty ; platform_system == "Windows"

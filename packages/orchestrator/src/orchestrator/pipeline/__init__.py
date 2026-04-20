@@ -32,10 +32,20 @@ def _call(name: str):
         res.raise_for_status()
     
 @flow(name="ml-pipeline", log_prints=True)
-def ml_pipeline():
-    run_ingestion()
-    run_transformation()
-    run_data_drift()
+def ml_pipeline(services: list[str] | None = None):
+    tasks = {
+        "ingestion":      run_ingestion,
+        "transformation": run_transformation,
+        "data_drift":     run_data_drift,
+    }
+    
+    to_run = services if services else list(tasks.keys())
+    
+    for service in to_run:
+        if service in tasks:
+            tasks[service]()
+        else:
+            logger.warning(f"Unknown service: {service}")
 
 class OrchestratorPipeline:
     def run_full_pipeline(self):

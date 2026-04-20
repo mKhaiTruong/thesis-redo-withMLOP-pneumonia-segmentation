@@ -11,21 +11,15 @@ class Experience:
     done:       bool
 
 @dataclass(frozen=True)
-class Simulation_Config:
-    cpu_warning:    int
-    cpu_critical:   int
-    ram_warning:    int
-    ram_critical:   int
-    latency_warning:  float
-    latency_critical: float
-    drift_warning:  float
-    drift_critical: float
-
-@dataclass(frozen=True)
 class DuelingDQN_Params_Config:
-    state_size:  int
-    action_size: int
-    hidden_size: int
+    n_metrics:      int
+    output_steps:   int
+    action_size:    int
+    hidden_size:    int
+    
+    @property
+    def state_size(self) -> int:
+        return self.n_metrics * (1 + self.output_steps)
     
 @dataclass(frozen=True)
 class DQN_Params_Config:
@@ -41,5 +35,18 @@ class DQN_Params_Config:
 class DQN_Planner_Config:
     root_dir:   Path
     model_dir:  Path
+    
     duel_dqn_params:    DuelingDQN_Params_Config
     dqn_params:         DQN_Params_Config
+
+@dataclass(frozen=True)
+class Simulation_Config:
+    cpu_warning:    int
+    cpu_critical:   int
+    ram_warning:    int
+    ram_critical:   int
+    latency_warning:  float
+    latency_critical: float
+    drift_warning:  float
+    drift_critical: float
+    output_steps:   int

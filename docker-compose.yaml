@@ -147,3 +147,18 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+
+  # ---------------------------------------------------------------
+
+  ai_manager:
+    build:
+      context: .
+      dockerfile: services/ai_manager/Dockerfile
+    ports:
+      - "7870:7860"
+    env_file: .env
+    depends_on:
+      - lstm
+      - dqn
+      - orchestrator
+      - prometheus

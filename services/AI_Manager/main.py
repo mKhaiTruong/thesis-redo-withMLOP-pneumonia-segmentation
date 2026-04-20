@@ -3,10 +3,7 @@ from fastapi import FastAPI
 from core.exception import CustomException
 from core.prometheus_metrics import instrument_app
 
-from ai_manager.config import ConfigManager
-from ai_manager.components.lstm_analyzer import LSTM_Analyzer
-from packages.dqn.src.dqn.components.dqn_planner import DQN_Planner
-from ai_manager.components.executer import Executer
+from ai_manager.pipeline import MAPE_K_Pipeline
 
 app = FastAPI()
 instrument_app(app, service_name="ai_manager")
@@ -20,41 +17,19 @@ instrument_app(app, service_name="ai_manager")
     E - Execute: Action executed
 """
 
-config_manager  = ConfigManager()
-lstm_analyzer   = LSTM_Analyzer(config=config_manager.get_lstm_config())
-dqn_planner     = DQN_Planner(config=config_manager.get_dqn_config())
-executer        = Executer()
-
 @app.post("/run-mape-k")
 def run_mape_k():
     try:
-        # M - Monitoring
-        current_state = lstm_analyzer.monitor()
-        
-        # A - Analyze
-        predicted_state = lstm_analyzer.analyze(current_state)
-        
-        # P - Plan
-        state  = {**current_state, **predicted_state}
-        action = dqn_planner.plan(state)
-        
-        # E - Execute
-        result = executer.execute(action)
-        
-        return {
-            "current_state":   current_state,
-            "predicted_state": predicted_state,
-            "action":          action,
-            "result":          result
-        }
+        return MAPE_K_Pipeline().run_once()
     except Exception as e:
         raise CustomException(e, sys)
     
 @app.post("/train-lstm")
 def train_lstm():
     try:
-        lstm_analyzer.train()
-        return {"status": "LSTM Training completed."}
+        import httpx
+        res = httpx.post("http://lstm:7860/train", timeout=None)
+        return {"status": "LSTM training triggered", "response": res.status_code}
     except Exception as e:
         raise CustomException(e, sys)
 
@@ -62,8 +37,9 @@ def train_lstm():
 @app.post("/train-dqn")
 def train_dqn():
     try:
-        dqn_planner.train()
-        return {"status": "DQN trained successfully"}
+        import httpx
+        res = httpx.post("http://dqn:7860/run-dqn-planner-training", timeout=None)
+        return {"status": "DQN training triggered", "response": res.status_code}
     except Exception as e:
         raise CustomException(e, sys)
     
@@ -71,12 +47,13 @@ def train_dqn():
 @app.get("/status")
 def status():
     try:
-        current_state = lstm_analyzer.monitor()
+        import httpx
+        lstm_ready = httpx.get("http://lstm:7860/health", timeout=5).json()["status"] == "ok"
+        dqn_ready  = httpx.get("http://dqn:7860/health", timeout=5).json()["status"] == "ok"
         return {
-            "status":       "ok",
-            "system_state": current_state,
-            "lstm_ready":   lstm_analyzer.is_ready(),
-            "dqn_ready":    dqn_planner.is_ready(),
+            "status":     "ok",
+            "lstm_ready": lstm_ready,
+            "dqn_ready":  dqn_ready,
         }
     except Exception as e:
         raise CustomException(e, sys)

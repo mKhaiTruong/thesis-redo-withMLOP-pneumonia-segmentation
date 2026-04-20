@@ -6,14 +6,17 @@ ACTIONS = {
     4: "restart_service",
 }
 
-import random
+import random, math
+from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 from core.logging import logger
+from dqn import Experience
 from dqn import DQN_Planner_Config
 from dqn import Simulation_Config
+from dqn.components.duel_dqn import DuelingDQN
 from dqn.components.buffer import ReplayBuffer
 
 class DQNPlanner:
@@ -40,6 +43,19 @@ class DQNPlanner:
         )
         
     # --------------------------- Inference ------------------------------------
+    def load(self):
+        if not Path(self.config.model_dir).exists():
+            logger.warning("DQN model not found — using untrained model")
+            return
+        
+        checkpoints = torch.load(self.config.model_dir, map_location=self.device)
+        self.online_net.load_state_dict(checkpoints["online_net"])
+        self.target_net.load_state_dict(checkpoints["target_net"])
+        self.epsilon    = checkpoints["epsilon"]
+        self.step_count = checkpoints["step_count"]
+        self._ready     = True
+        logger.info("DQN model loaded")
+        
     def plan(self, state: dict) -> str:
         state_tensor = self._dict_to_tensor(state)
         
@@ -55,15 +71,16 @@ class DQNPlanner:
         return action
     
     def _dict_to_tensor(self, state: dict) -> torch.Tensor:
+        n = self.config.duel_dqn_params.output_steps  # 5
         values = (
             state.get("current_cpu",         [0.0]) +
             state.get("current_ram",         [0.0]) +
             state.get("current_latency",     [0.0]) +
             state.get("current_drift",       [0.0]) +
-            state.get("predicted_cpu",       [0.0]*4) +
-            state.get("predicted_ram",       [0.0]*4) +
-            state.get("predicted_latency",   [0.0]*4) +
-            state.get("predicted_drift",     [0.0]*4)
+            state.get("predicted_cpu",       [0.0]*n) +
+            state.get("predicted_ram",       [0.0]*n) +
+            state.get("predicted_latency",   [0.0]*n) +
+            state.get("predicted_drift",     [0.0]*n)
         )
         return torch.tensor(values, dtype=torch.float32).unsqueeze(0).to(self.device)
     # ------------------------------------------------------------------------------------

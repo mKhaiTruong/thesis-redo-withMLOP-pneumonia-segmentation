@@ -24,9 +24,9 @@ class ConfigManager:
             latency_warning = params.latency_warning,
             latency_critical    = params.latency_critical,
             drift_warning   = float(params.drift_warning),
-            drift_critical  = float(params.drift_critical)
+            drift_critical  = float(params.drift_critical),
+            output_steps    = params.output_steps
         )
-        
         
     def get_dqn_planner_config(self) -> DQN_Planner_Config:
         config = self.config.dqn_planner_config
@@ -38,7 +38,8 @@ class ConfigManager:
             model_dir = Path(config.root_dir) / "dqn_model.pth",
             
             duel_dqn_params = DuelingDQN_Params_Config(
-                state_size  = params.state_size,
+                n_metrics   = params.n_metrics,
+                output_steps= params.output_steps,
                 action_size = params.action_size,
                 hidden_size = params.hidden_size
             ),

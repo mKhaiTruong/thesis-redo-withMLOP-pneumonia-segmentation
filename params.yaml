@@ -63,7 +63,8 @@ lstm_params:
   lr: 0.001
 
 dqn_planner_params:
-  state_size: 20
+  n_metrics: 4 # cpu, ram, latency, drift
+  output_steps: 5 # must equal to lstm_params.output_steps
   action_size: 5
   hidden_size: 128
   lr: 0.001
@@ -83,3 +84,4 @@ simulation_params:
   latency_critical: 1.0
   drift_warning: 0.3
   drift_critical: 0.5
+  output_steps: 5 # must equal to lstm_params.output_steps

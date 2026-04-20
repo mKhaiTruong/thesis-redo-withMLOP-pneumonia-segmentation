@@ -3,6 +3,8 @@ name = "pnseg-ai_manager"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
+    "httpx",
+    "prefect",
 ]
 
 [tool.setuptools.packages.find]

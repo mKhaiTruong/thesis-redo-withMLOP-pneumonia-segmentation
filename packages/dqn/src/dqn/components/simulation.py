@@ -13,7 +13,7 @@ from dqn import Simulation_Config
 class SystemSimulation:
     def __init__(self, config: Simulation_Config):
         self.config     = config
-        self.state_size = 20
+        self.state_size = 24
         self.reset()
         
     def reset(self) -> np.ndarray:
@@ -26,7 +26,7 @@ class SystemSimulation:
 
     def _get_state(self) -> np.ndarray:
         current   = [self.cpu, self.ram, self.latency, self.drift]
-        predicted = current * 4
+        predicted = current * self.config.output_steps
         return np.array(current + predicted, dtype=np.float32)
     
     def step(self, action: int) -> tuple[np.ndarray, float, bool]:

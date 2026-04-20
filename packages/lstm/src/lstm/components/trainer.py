@@ -83,5 +83,7 @@ class LSTM_Trainer:
             "std":  self.std,
             "input_steps":  self.config.lstm_params.input_steps,
             "output_steps": self.config.lstm_params.output_steps,
+            "hidden_size":  self.config.lstm_params.hidden_size,
+            "num_layers":   self.config.lstm_params.num_layers,
         }, self.config.model_dir)
         logger.info(f"LSTM model saved -> {self.config.model_dir}")
