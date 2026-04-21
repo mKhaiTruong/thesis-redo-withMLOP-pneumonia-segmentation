@@ -8,6 +8,9 @@ dependencies = [
     "onnxruntime",
 ]
 
+[project.scripts]
+pnseg-onnx_export = "onnx_export.cli:app"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["onnx_export*"]
