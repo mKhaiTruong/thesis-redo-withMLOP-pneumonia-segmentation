@@ -58,6 +58,7 @@ class Onnx:
                 self.model, dummy_input,
                 str(self.config.onnx_model_dir),
                 opset_version = 17,
+                dynamo=False,
                 input_names   = ["input"],
                 output_names  = ["output"],
                 dynamic_axes  = {"input": {0: "batch_size"}, "output": {0: "batch_size"}},
