@@ -41,7 +41,7 @@ for run_info_path in TRAIN_ROOT.glob("*/run_info.json"):
 from core.constants import * 
 from core.utils import read_yaml
 config = read_yaml(CONFIG_FILE_PATH)
-TRAIN_ROOT = config.training_config.root_dir
+TRAIN_ROOT = Path(config.training_config.root_dir)
 
 BEST_SLUG = max(
     TRAIN_ROOT.glob("*/run_info.json"),
