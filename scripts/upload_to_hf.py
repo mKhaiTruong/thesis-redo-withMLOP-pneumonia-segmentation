@@ -28,18 +28,18 @@ for run_info_path in TRAIN_ROOT.glob("*/run_info.json"):
     ]
     for local_path, repo_path in files:
         if not local_path.exists():
-            logging.info(f"Skipping {local_path} - not found")
+            logger.info(f"Skipping {local_path} - not found")
             continue
         api.upload_file(
             path_or_fileobj = str(local_path),
             path_in_repo    = repo_path,
             repo_id         = REPO_ID,
         )
-        logging.info(f"Uploaded {local_path} -> {repo_path}")
+        logger.info(f"Uploaded {local_path} -> {repo_path}")
 
 # -- push chosen model flat --
-from pneumonia_segmentation.constants import * 
-from pneumonia_segmentation.utils.common import read_yaml
+from core.constants import * 
+from core.utils import read_yaml
 config = read_yaml(CONFIG_FILE_PATH)
 TRAIN_ROOT = config.training_config.root_dir
 
@@ -57,9 +57,9 @@ if best_onnx.exists():
         path_in_repo    = "best_model.onnx",
         repo_id         = REPO_ID,
     )
-    logging.info(f"Best model set to: {BEST_SLUG}")
+    logger.info(f"Best model set to: {BEST_SLUG}")
 else:
-    logging.info(f"WARNING: {best_onnx} not found - best_model.onnx not updated")
+    logger.info(f"WARNING: {best_onnx} not found - best_model.onnx not updated")
     
 if best_onnx_int8.exists():
     api.upload_file(
@@ -67,11 +67,11 @@ if best_onnx_int8.exists():
         path_in_repo    = "best_model_int8.onnx",
         repo_id         = REPO_ID,
     )
-    logging.info(f"Best model set to: {BEST_SLUG}")
+    logger.info(f"Best model set to: {BEST_SLUG}")
 else:
-    logging.info(f"WARNING: {best_onnx_int8} not found - best_model_int8.onnx not updated")
+    logger.info(f"WARNING: {best_onnx_int8} not found - best_model_int8.onnx not updated")
 
-logging.info(f"Done! https://huggingface.co/{REPO_ID}")
+logger.info(f"Done! https://huggingface.co/{REPO_ID}")
 
 
 # -- push drift baseline --
@@ -83,6 +83,6 @@ if BASELINE_PATH.exists():
         path_in_repo    = "baseline_distribution.npy",
         repo_id         = REPO_ID,
     )
-    logging.info("Baseline distribution uploaded.")
+    logger.info("Baseline distribution uploaded.")
 else:
-    logging.info("WARNING: baseline_distribution.npy not found - skipping")
+    logger.info("WARNING: baseline_distribution.npy not found - skipping")

@@ -5,10 +5,6 @@ from pathlib import Path
 class OnnxModelConfig:
     onnx_dir:       Path
     onnx_int8_dir:  Path
-    
-@dataclass(frozen=True)
-class TensorRTEngineConfig:
-    engine_dir:  Path
 
 @dataclass(frozen=True)
 class EvalDataConfig:
@@ -26,6 +22,5 @@ class EvaluationParamsConfig:
 class EvaluationConfig:
     root_dir: Path
     onnx:   OnnxModelConfig
-    engine: TensorRTEngineConfig
     data:   EvalDataConfig
     eval:   EvaluationParamsConfig
