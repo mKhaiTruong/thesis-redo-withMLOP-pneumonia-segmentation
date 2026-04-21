@@ -2,7 +2,8 @@ from core.constants import *
 from core.utils import read_yaml, create_directories
 
 from evaluation import (
-    OnnxModelConfig, EvalDataConfig, EvaluationParamsConfig, EvaluationConfig
+    ModelConfig, OnnxModelConfig, EvalDataConfig, EvaluationParamsConfig, 
+    EvaluationConfig
 )
 
 class ConfigManager:
@@ -33,11 +34,14 @@ class ConfigManager:
         create_directories([eval_config.root_dir])
         
         slug = self._model_slug()
+        train_root  = Path(self.config.training_config.root_dir)
         onnx_root   = Path(self.config.onnx_config.root_dir)
-        engine_root = Path(self.config.tensorRT_config.root_dir)
 
         evaluation_config = EvaluationConfig(
             root_dir = Path(eval_config.root_dir),
+            model = ModelConfig(
+                model_dir = train_root / slug / "best_model.pth",
+            ),
             onnx = OnnxModelConfig(
                 onnx_dir        = onnx_root / slug / "model.onnx",
                 onnx_int8_dir   = onnx_root / slug / "model_int8.onnx"
