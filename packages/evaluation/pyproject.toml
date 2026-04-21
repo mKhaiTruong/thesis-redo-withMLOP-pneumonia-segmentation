@@ -1,0 +1,20 @@
+[project]
+name = "pnseg-evaluation"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "pnseg-onnx_export",
+    "pnseg-training",
+    "segmentation-models-pytorch",
+    "onnxruntime-gpu",
+    "mlflow",
+    "albumentations",
+    "typer",
+]
+
+[project.scripts]
+pnseg-evaluation = "evaluation.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["evaluation*"]

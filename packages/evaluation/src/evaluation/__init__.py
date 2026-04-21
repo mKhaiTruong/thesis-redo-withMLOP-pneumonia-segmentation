@@ -3,6 +3,8 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class ModelConfig:
+    model_name:      str    
+    encoder:         str
     model_dir:       Path
 
 @dataclass(frozen=True)

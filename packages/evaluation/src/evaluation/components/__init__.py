@@ -29,11 +29,8 @@ class Evaluation:
         return lambda preds, masks: dice(preds, masks) + focal(preds, masks)
 
     def _load_pytorch_model(self) -> torch.nn.Module:
-        run_info = json.loads(
-            (self.config.model.model_dir.parent / "run_info.json").read_text()
-        )
-        model = MODEL_MAP[run_info["model_name"]](
-            encoder_name    = run_info["encoder"],
+        model = MODEL_MAP[self.config.model.model_name](
+            encoder_name    = self.config.model.encoder,
             encoder_weights = None,
             classes         = 1,
             activation      = None,

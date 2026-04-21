@@ -6,7 +6,7 @@ from evaluation import (
     EvaluationConfig
 )
 
-class ConfigManager:
+class ConfigurationManager:
     def __init__(self, 
                  config_filepath = CONFIG_FILE_PATH, 
                  params_filepath = PARAMS_FILE_PATH):
@@ -36,11 +36,14 @@ class ConfigManager:
         slug = self._model_slug()
         train_root  = Path(self.config.training_config.root_dir)
         onnx_root   = Path(self.config.onnx_config.root_dir)
+        p = self.params.prepare_base_model_params
 
         evaluation_config = EvaluationConfig(
             root_dir = Path(eval_config.root_dir),
             model = ModelConfig(
-                model_dir = train_root / slug / "best_model.pth",
+                model_name  = p.model_name,
+                encoder     = p.encoder,
+                model_dir   = train_root / slug / "best_model.pth",
             ),
             onnx = OnnxModelConfig(
                 onnx_dir        = onnx_root / slug / "model.onnx",
