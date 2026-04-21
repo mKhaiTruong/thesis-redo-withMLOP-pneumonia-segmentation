@@ -5,7 +5,7 @@ from core.logging import logger
 load_dotenv()
 app = typer.Typer()
         
-@app.command()
+@app.command("export")
 def export(
     slug: str = typer.Option(..., help="Model slug, for example, segformer_mit_b2"),
 ):

@@ -6,7 +6,7 @@ from core.logging import logger
 load_dotenv()
 app = typer.Typer()
 
-@app.command()
+@app.command("train")
 def train(
     model:  str = typer.Option("segformer", help="Model: [unet, unetpp, manet, segformer]"),
     encoder:str = typer.Option("mit_b2",    help="Encoder type"),    
