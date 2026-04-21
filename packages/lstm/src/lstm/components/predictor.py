@@ -73,10 +73,10 @@ class LSTM_Predictor_:
 
 
     def predict(self) -> dict:
-        cpu     = self._query_prometheus('rate(process_cpu_seconds_total[1m]) * 100')
-        ram     = self._query_prometheus('process_resident_memory_bytes / 1024 / 1024')
-        latency = self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket[5m]))')
-        drift   = self._query_prometheus('inference_drift_score')
+        cpu     = self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100')
+        ram     = self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024')
+        latency = self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))')
+        drift   = self._query_prometheus('inference_drift_score{job="app"}')
         
         metrics = torch.tensor(
             list(zip(cpu, ram, latency, drift)),
@@ -105,8 +105,8 @@ class LSTM_Predictor_:
         
     def get_current_state(self) -> dict:
         return {
-            "current_cpu":     [self._query_prometheus("rate(process_cpu_seconds_total[1m]) * 100")[-1]],
-            "current_ram":     [self._query_prometheus("process_resident_memory_bytes / 1024 / 1024")[-1]],
-            "current_latency": [self._query_prometheus("histogram_quantile(0.95, rate(service_request_latency_seconds_bucket[5m]))")[-1]],
-            "current_drift":   [self._query_prometheus("inference_drift_score")[-1]],
+            "current_cpu":     [self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100')[-1]],
+            "current_ram":     [self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024')[-1]],
+            "current_latency": [self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))')[-1]],
+            "current_drift":   [self._query_prometheus('inference_drift_score{job="app"}')[-1]],
         }

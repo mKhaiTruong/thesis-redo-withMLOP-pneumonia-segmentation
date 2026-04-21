@@ -16,23 +16,17 @@ ACTIONS = {
 class Executer(BaseAIManagerComponent):
     def run(self, action: str) -> dict:
         logger.info(f"Executing action: {action}")
+        if action not in ACTIONS:
+            raise ValueError(f"Unknown action: {action}. Available: {list(ACTIONS.keys())}")
         
         try:
             if action == "do_nothing":
                 return {"status": "no action taken"}
-            elif action == "trigger_retraining":
-                httpx.post(f"{ORCHESTRATOR_URL}/run/ingestion", timeout=None)
-                return {"status": "trigger_retraining"}
-            elif action == "switch_to_lighter_model":
-                httpx.post(f"{APP_URL}/switch-model", timeout=10)
-                return {"status": "switch_to_lighter_model"}
-            elif action == "scale_up_service":
-                httpx.post(f"{ORCHESTRATOR_URL}/run-pipeline", timeout=None)
-                return {"status": "scaling up service: training pipeline triggered"}
-            elif action == "restart_service":
-                httpx.post(f"{ORCHESTRATOR_URL}/run/data_drift", timeout=None)
-                return {"status": "data_drift spotted: service restarted"}
-            else:
-                return {"status": f"unknown action: {action}"}
+            
+            res = httpx.post(
+                f"{ORCHESTRATOR_URL}/execute/{action}", 
+                timeout=None
+            )
+            return res.json()
         except Exception as e:
             return {"status": f"execute failed: {str(e)}"}

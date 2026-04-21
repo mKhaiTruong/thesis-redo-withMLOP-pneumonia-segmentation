@@ -3,10 +3,15 @@ name = "pnseg-training"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
+    "pnseg-onnx_export",
     "segmentation-models-pytorch",
     "mlflow",
     "albumentations",
+    "typer",
 ]
+
+[project.scripts]
+pnseg-train = "training.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

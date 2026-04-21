@@ -23,3 +23,10 @@ def run_single_service(service_name: str):
         return {"status": f"{service_name} completed"}
     except Exception as e:
         raise CustomException(e, sys)
+
+@app.post("/execute/{action}")
+def execute_action(action: str):
+    try:
+        return pipeline.execute_action(action)
+    except Exception as e:
+        raise CustomException(e, sys)

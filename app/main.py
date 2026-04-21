@@ -4,8 +4,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from prometheus_fastapi_instrumentator import Instrumentator
-
 from pneumonia_segmentation.exception import CustomException
 from pneumonia_segmentation.pipeline.prediction import PredictionPipeline
 
@@ -54,15 +52,8 @@ app.add_middleware(
 )
 
 # Prometheus
-Instrumentator().instrument(app).expose(app)
-from prometheus_client import Gauge, Counter, Histogram
-drift_score_gauge = Gauge("model_drift_score", "Euclidean (L2 Norm) vs baseline")
-drift_counter     = Counter("model_drift_detected_total", "Total drift detections")
-infer_time_hist   = Histogram(
-    "model_inference_ms",
-    "Inference latency",
-    buckets=[5, 10, 20, 50, 100, 200, 500]
-)
+from core.prometheus_metrics import instrument_app, DRIFT_SCORE, IS_DRIFT
+instrument_app(app, service_name="app")
 
 @app.get("/", response_class=HTMLResponse)
 def root():
@@ -82,6 +73,12 @@ async def debug():
         "ram_total_mb": psutil.virtual_memory().total / 1024 / 1024,
         "process_ram_mb": process.memory_info().rss / 1024 / 1024,
     }
+    
+@app.post("/debug/set-drift")
+def set_drift(score: float):
+    DRIFT_SCORE.set(score)
+    IS_DRIFT.set(1 if score > 60 else 0)
+    return {"drift_score": score}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -108,10 +105,8 @@ async def predict(file: UploadFile = File(...)):
         score = drift_result["drift_score"]
         status = get_drift_status(score)
 
-        drift_score_gauge.set(score)
-        infer_time_hist.observe(latency)
-        if drift_result["is_drift"]:
-            drift_counter.inc()
+        DRIFT_SCORE.set(score)
+        IS_DRIFT.set(1 if drift_result["is_drift"] else 0)
 
         _, buffer = cv2.imencode(".png", overlay)
         return StreamingResponse(
@@ -134,3 +129,28 @@ async def predict(file: UploadFile = File(...)):
                 detail="Server temporarily overloaded, please retry in a few seconds"
             )
         raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
+# ACTIONS BEHAVIOR
+import onnxruntime as ort
+
+@app.post("/reload-model")
+def reload_model():
+    try:
+        ml_models["model"] = PredictionPipeline()
+        return {"status": "model reloaded"}
+    except Exception as e:
+        raise CustomException(e, sys)
+
+@app.post("/switch-model")
+def switch_model(model_type: str = "int8"):
+    try:
+        path = f"artifacts/best_model_{model_type}.onnx"
+        if not Path(path).exists():
+            raise HTTPException(status_code=404, detail=f"Model not found: {path}")
+        ml_models["model"].session = ort.InferenceSession(
+            path, providers=["CPUExecutionProvider"]
+        )
+        return {"status": "switched", "model": path}
+    except Exception as e:
+        raise CustomException(e, sys)

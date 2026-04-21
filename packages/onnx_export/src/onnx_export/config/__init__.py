@@ -31,10 +31,10 @@ class ConfigurationManager:
         )
     
     # ── public ───────────────────────────────────────────────
-    def get_onnx_config(self) -> OnnxConfig:
+    def get_onnx_config(self, slug: str = None) -> OnnxConfig:
         onnx_root  = Path(self.config.onnx_config.root_dir) 
         train_root = Path(self.config.training_config.root_dir)
-        slug       = self._model_slug()
+        slug       = self._model_slug() if slug is None else slug
 
         return OnnxConfig(
             root_dir        = onnx_root,

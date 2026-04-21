@@ -14,8 +14,6 @@ def _is_notebook() -> bool:
         return False  # standard Python
     
 def _get_sampler(dataset: CustomDataset):
-    weights = [1.0 if msk_path else 0.1 for msk_path in dataset.msk_paths]
-    
     weights = []
     for msk_path in dataset.msk_paths:
         import cv2, numpy as np

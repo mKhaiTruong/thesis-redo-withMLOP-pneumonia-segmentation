@@ -47,7 +47,10 @@ def ml_pipeline(services: list[str] | None = None):
         else:
             logger.warning(f"Unknown service: {service}")
 
+APP_URL = "http://app:7860"
+
 class OrchestratorPipeline:
+    # DEBUGGING ---------------------------
     def run_full_pipeline(self):
         ml_pipeline()
 
@@ -56,3 +59,24 @@ class OrchestratorPipeline:
             raise ValueError(f"Unknown service: {service}. Available: {list(MICROSERVICES.keys())}")
         ml_pipeline(services=[service])
     
+    
+    # ACTIONS BEHAVIORS
+    def execute_action(self, action: str) -> dict:
+        if action == "trigger_retraining":
+            self.run_full_pipeline()
+            return {"status": "RETRAINING TRIGGERED"}
+        
+        elif action == "switch_to_lighter_model":
+            httpx.post(f"{APP_URL}/switch-model", timeout=10)
+            return {"status": "SWITCHING TO LIGHTER MODEL"}
+        
+        elif action == "scale_up_service":
+            self.run_full_pipeline()
+            return {"status": "SCALING UP SERVICE"}
+        
+        elif action == "restart_service":
+            httpx.post(f"{APP_URL}/reload-model", timeout=10)
+            return {"status": "RESTARTING SERVICE"}
+        
+        else:
+            return {"status": f"UNKNOWN ACTION -> {action}"}

@@ -79,7 +79,7 @@ class Training:
                 self.scheduler, epoch, self.device
             )
             
-            if epoch % 2 == 0:
+            if epoch % 2 == 0 and epoch > 0:
                 valid_loss, mean_iou = self._run_validation(epoch)
                 
                 mlflow.log_metrics({

@@ -17,6 +17,10 @@ instrument_app(app, service_name="ai_manager")
     E - Execute: Action executed
 """
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.post("/run-mape-k")
 def run_mape_k():
     try:

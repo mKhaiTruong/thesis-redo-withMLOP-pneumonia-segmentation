@@ -37,19 +37,39 @@ for run_info_path in TRAIN_ROOT.glob("*/run_info.json"):
         )
         logging.info(f"Uploaded {local_path} -> {repo_path}")
 
-# -- push chosen model flat --    
-CHOSEN_SLUG = "unetpp_efficientnet-b4"
-best_onnx = ONNX_ROOT / CHOSEN_SLUG / "model_int8.onnx"
+# -- push chosen model flat --
+from pneumonia_segmentation.constants import * 
+from pneumonia_segmentation.utils.common import read_yaml
+config = read_yaml(CONFIG_FILE_PATH)
+TRAIN_ROOT = config.training_config.root_dir
+
+BEST_SLUG = max(
+    TRAIN_ROOT.glob("*/run_info.json"),
+    key=lambda p: json.loads(p.read_text()).get("iou_score", 0)
+).parent.name
+
+best_onnx   = ONNX_ROOT / BEST_SLUG / "model.onnx"
+best_onnx_int8 = ONNX_ROOT / BEST_SLUG / "model_int8.onnx"
 
 if best_onnx.exists():
     api.upload_file(
         path_or_fileobj = str(best_onnx),
+        path_in_repo    = "best_model.onnx",
+        repo_id         = REPO_ID,
+    )
+    logging.info(f"Best model set to: {BEST_SLUG}")
+else:
+    logging.info(f"WARNING: {best_onnx} not found - best_model.onnx not updated")
+    
+if best_onnx_int8.exists():
+    api.upload_file(
+        path_or_fileobj = str(best_onnx_int8),
         path_in_repo    = "best_model_int8.onnx",
         repo_id         = REPO_ID,
     )
-    logging.info(f"Best model set to: {CHOSEN_SLUG}")
+    logging.info(f"Best model set to: {BEST_SLUG}")
 else:
-    logging.info(f"WARNING: {best_onnx} not found - best_model_int8.onnx not updated")
+    logging.info(f"WARNING: {best_onnx_int8} not found - best_model_int8.onnx not updated")
 
 logging.info(f"Done! https://huggingface.co/{REPO_ID}")
 
