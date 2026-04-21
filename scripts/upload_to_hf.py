@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, login
 
-from pneumonia_segmentation import logging
+from core.logging import logger
 
 load_dotenv()
 # -- config --
