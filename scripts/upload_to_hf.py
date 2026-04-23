@@ -85,3 +85,22 @@ if BASELINE_PATH.exists():
     logger.info("Baseline distribution uploaded.")
 else:
     logger.info("WARNING: baseline_distribution.npy not found - skipping")
+    
+# -- push retrain status signal --
+import json, tempfile, time
+status_payload = json.dump({
+    "status":    "complete",
+    "slug":      BEST_SLUG,
+    "timestamp": time.time(),
+})
+
+with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    f.write(status_payload)
+    tmp_path = f.name
+
+api.upload_file(
+    path_or_fileobj = tmp_path,
+    path_in_repo    = "retrain_status.json",
+    repo_id         = REPO_ID,
+)
+logger.info("Retrain status signal pushed to HF.")

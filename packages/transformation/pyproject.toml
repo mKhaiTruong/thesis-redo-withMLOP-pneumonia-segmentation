@@ -8,6 +8,7 @@ dependencies = [
     "numpy",
     "tqdm",
     "python-dotenv",
+    "kagglehub",
 ]
 
 [tool.setuptools.packages.find]

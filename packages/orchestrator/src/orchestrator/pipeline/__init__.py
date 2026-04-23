@@ -1,9 +1,21 @@
+import sys, json, time
 import httpx
+import asyncio
 from prefect import flow, task
+
 from core.logging import logger
 
 import os
 os.environ["PREFECT_API_URL"] = "http://prefect:4200/api"
+
+
+HF_REPO_ID      = "bill123mk/pneumonia-seg-weights"
+HF_STATUS_FILE  = "retrain_status.json"
+KAGGLE_USERNAME = os.getenv("KAGGLE_USERNAME")
+KAGGLE_KERNEL   = os.getenv("KAGGLE_KERNEL_SLUG")
+POLL_INTERVAL   = 60 * 2        # Sleep every 2 minutes
+POLL_TIMEOUT    = 3600 * 4      # Timeout after 4 hours
+
 
 MICROSERVICES = {
     "ingestion":          "http://ingestion:7860/run-ingestion",
@@ -59,13 +71,18 @@ class OrchestratorPipeline:
             raise ValueError(f"Unknown service: {service}. Available: {list(MICROSERVICES.keys())}")
         ml_pipeline(services=[service])
     
-    
-    # ACTIONS BEHAVIORS
+    # ACTIONS BEHAVIORS ---------------------------
     def execute_action(self, action: str) -> dict:
         if action == "trigger_retraining":
-            self.run_full_pipeline()
-            return {"status": "RETRAINING TRIGGERED"}
-        
+            try:
+                self.run_single_service("ingestion")
+                self.run_single_service("transformation")
+            except Exception as e:
+                logger.error(f"Retrain data prep failed: {e}")
+                return {"status": "UNABLE TO UPLOAD DATA TO HF"}
+            
+            return {"status": "DATA UPLOADED; PLEASE GO TO KAGGLE NOTEBOOK AND TRAIN"}
+                
         elif action == "switch_to_lighter_model":
             httpx.post(f"{APP_URL}/switch-model", timeout=10)
             return {"status": "SWITCHING TO LIGHTER MODEL"}

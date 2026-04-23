@@ -25,8 +25,17 @@ class SystemSimulation:
         return self._get_state()
 
     def _get_state(self) -> np.ndarray:
-        current   = [self.cpu, self.ram, self.latency, self.drift]
-        predicted = current * self.config.output_steps
+        cpu, ram, lat, drift = self.cpu, self.ram, self.latency, self.drift
+        current   = [cpu, ram, lat, drift]
+        
+        predicted = []
+        for _ in range(self.config.output_steps):
+            cpu   = np.clip(cpu   + np.random.normal(0, 2),    0, 100)
+            ram   = np.clip(ram   + np.random.normal(0, 1),    0, 100)
+            lat   = np.clip(lat   + np.random.normal(0, 0.01), 0, 5)
+            drift = np.clip(drift + np.random.normal(0, 0.01), 0, 1)
+            predicted += [cpu, ram, lat, drift]
+        
         return np.array(current + predicted, dtype=np.float32)
     
     def step(self, action: int) -> tuple[np.ndarray, float, bool]:

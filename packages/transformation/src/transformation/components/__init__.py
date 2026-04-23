@@ -66,3 +66,18 @@ class DataTransformation:
         
         if not img_saved or not mask_saved:
             logger.warning(f"Failed to save pair {counter}")
+    
+    
+    def push_to_kaggle(self, message: str = "auto update") -> None:
+        try:
+            import kagglehub
+            from dotenv import load_dotenv
+            load_dotenv()
+            
+            handle = f"{os.getenv('KAGGLE_USERNAME')}/{os.getenv('KAGGLE_DATASET_SLUG')}"
+            kagglehub.dataset_upload(handle, self.config.root_dir, version_notes=message)
+            
+            logger.info(f"Pushed to Kaggle: {handle}")
+        except Exception as e:
+            raise CustomException(e, sys)
+        

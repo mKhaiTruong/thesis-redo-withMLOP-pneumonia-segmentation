@@ -14,6 +14,7 @@ class DataTransformationPipeline:
         data_transformation_config = cfg_manager.get_data_transformation_config()
         data_transformation = DataTransformation(config=data_transformation_config)
         data_transformation.transform()
+        data_transformation.push_to_kaggle()
 
 
 if __name__ == "__main__":
