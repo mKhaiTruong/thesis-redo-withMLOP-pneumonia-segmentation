@@ -31,7 +31,14 @@ ml_models = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    ml_models["model"] = PredictionPipeline()
+    try:
+        print("Loading model...", flush=True)
+        ml_models["model"] = PredictionPipeline()
+        print("Model loaded OK", flush=True)
+    except Exception as e:
+        print(f"STARTUP CRASH: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
     yield
     ml_models.clear()
 
