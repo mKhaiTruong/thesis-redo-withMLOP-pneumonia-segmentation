@@ -10,10 +10,11 @@ from pneumonia_segmentation.pipeline.prediction import PredictionPipeline
 import psutil
 print("========= APP STARTING =========", flush=True)
 def check_ram_usage():
-    vm = psutil.virtual_memory()
-    if vm.percent > 85.0:
-        return False, vm.percent
-    return True, vm.percent
+    process = psutil.Process()
+    process_ram_mb = process.memory_info().rss / 1024 / 1024
+    if process_ram_mb > 1800:
+        return False, process_ram_mb
+    return True, process_ram_mb
 
 def get_drift_status(score):
     if score < 50:
