@@ -8,7 +8,7 @@ from pneumonia_segmentation.exception import CustomException
 from pneumonia_segmentation.pipeline.prediction import PredictionPipeline
 
 import psutil
-
+print("========= APP STARTING =========", flush=True)
 def check_ram_usage():
     vm = psutil.virtual_memory()
     if vm.percent > 85.0:
