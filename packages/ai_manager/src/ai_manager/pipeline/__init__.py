@@ -17,10 +17,19 @@ def analyze():
 def plan(state: dict):
     return ComponentFactory().create("dqn_planner").run(state)
 
+import time
+_last_action_time = {}
+_cooldown_seconds = 300
+
 @task(name="execute", retries=2, retry_delay_seconds=5)
 def execute(action: str):
+    last = _last_action_time.get(action, 0)
+    if (time.time() - last) < _cooldown_seconds:
+        logger.info(f"Cooldown active, skipping: {action}")
+        return {"status": "COOLDOWN", "action": action}
+    
+    _last_action_time[action] = time.time()
     return ComponentFactory().create("executer").run(action)
-
 
 @flow(name="mape-k", log_prints=True)
 def mape_k_flow():

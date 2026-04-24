@@ -1,0 +1,13 @@
+[project]
+name = "pnseg-inference"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "pnseg-data_drift",
+    "python-dotenv",
+    "huggingface_hub"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["inference*"]

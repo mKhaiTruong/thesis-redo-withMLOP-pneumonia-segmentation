@@ -4,8 +4,8 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from pneumonia_segmentation.exception import CustomException
-from pneumonia_segmentation.pipeline.prediction import PredictionPipeline
+from core.exception import CustomException
+from inference.pipeline import PredictionPipeline
 
 import psutil
 print("========= APP STARTING =========", flush=True)
@@ -145,7 +145,7 @@ import onnxruntime as ort
 @app.post("/reload-model")
 def reload_model():
     try:
-        ml_models["model"] = PredictionPipeline()
+        ml_models["model"].reload()
         return {"status": "model reloaded"}
     except Exception as e:
         raise CustomException(e, sys)
@@ -156,7 +156,7 @@ def switch_model(model_type: str = "int8"):
         path = f"artifacts/best_model_{model_type}.onnx"
         if not Path(path).exists():
             raise HTTPException(status_code=404, detail=f"Model not found: {path}")
-        ml_models["model"].session = ort.InferenceSession(
+        ml_models["model"].model.session = ort.InferenceSession(
             path, providers=["CPUExecutionProvider"]
         )
         return {"status": "switched", "model": path}

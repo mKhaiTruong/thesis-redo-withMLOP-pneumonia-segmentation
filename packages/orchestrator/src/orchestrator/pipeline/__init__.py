@@ -74,6 +74,14 @@ class OrchestratorPipeline:
     # ACTIONS BEHAVIORS ---------------------------
     def execute_action(self, action: str) -> dict:
         if action == "trigger_retraining":
+            """
+                Flow: 
+                    1. Ingestion (Automatic)
+                    2. Transformation (Automatic)
+                    3. Training: Dev has to go to the Kaggle notebook to start training
+                    4. After training, the model is uploaded to Huggingface
+                    5. Pull models and then reload model
+            """
             try:
                 self.run_single_service("ingestion")
                 self.run_single_service("transformation")
@@ -81,7 +89,10 @@ class OrchestratorPipeline:
                 logger.error(f"Retrain data prep failed: {e}")
                 return {"status": "UNABLE TO UPLOAD DATA TO HF"}
             
-            return {"status": "DATA UPLOADED; PLEASE GO TO KAGGLE NOTEBOOK AND TRAIN"}
+            logger.error(f"DATA UPLOADED; PLEASE GO TO KAGGLE NOTEBOOK AND TRAIN")
+            logger.error(f"AFTER TRAINING FINISHED, RELOAD MODEL")
+            
+            return {"status": "RETRAINING TRIGGERED"}
                 
         elif action == "switch_to_lighter_model":
             httpx.post(f"{APP_URL}/switch-model", timeout=10)
@@ -97,3 +108,4 @@ class OrchestratorPipeline:
         
         else:
             return {"status": f"UNKNOWN ACTION -> {action}"}
+    
