@@ -1,5 +1,5 @@
 data_transformation_params:
-  image_size: 256
+  image_size: 512
   skip_background_ratio: 0.8
   slice_interval: 4
   valid_size: 0.1
@@ -7,7 +7,7 @@ data_transformation_params:
 
 data_drift_params:
   drift_threshold: 50.0
-  n_bins: 256
+  n_bins: 512
   max_samples: null
   seed: 42
   model_name: "resnet50"
@@ -30,7 +30,7 @@ training_params:
   epochs: 21
   workers: 8
   seed: 42
-  image_size: 256
+  image_size: 512
   is_augmentation: True
   metric_mode: "max"
   loss_function: "focal-loss"
@@ -39,18 +39,18 @@ training_params:
   gamma: 2.0
 
 onnx_params:
-  image_size: 256
+  image_size: 512
 
 evaluation_params:
   batch_size: 8
   workers: 4
-  image_size: 256
+  image_size: 512
   is_augmentation: False
   threshold: 0.5
 
 tensorRT_params:
   batch_size: 8
-  image_size: 256
+  image_size: 512
 
 lstm_params:
   input_steps: 30

@@ -4,7 +4,7 @@ from pneumonia_segmentation.utils.augmentation import *
 
 class CustomDataset(Dataset): 
     def __init__(self, images, is_train=False, masks=None, 
-                 image_size=256, cache_size=256):
+                 image_size=512, cache_size=512):
         
         if is_train and masks is None:
             raise ValueError("Training dataset requires masks, but masks=None was provided.")

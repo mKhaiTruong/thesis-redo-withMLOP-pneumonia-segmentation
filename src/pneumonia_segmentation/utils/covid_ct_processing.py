@@ -66,7 +66,7 @@ COLORMAP_MAP = {
     "BONE": cv2.COLORMAP_BONE,
     "JET": cv2.COLORMAP_JET,
 }
-def normalize_and_colormap(ct_slice: np.ndarray, mask_bin: np.ndarray, image_size: int = 512, colormap: str = "JET") -> tuple:
+def normalize_and_colormap(ct_slice: np.ndarray, mask_bin: np.ndarray, image_size: int = 512, colormap: str = "BONE") -> tuple:
     lung_pixels = ct_slice[mask_bin > 0]
     if lung_pixels.size > 0:
         min_val, max_val = lung_pixels.min(), lung_pixels.max()
