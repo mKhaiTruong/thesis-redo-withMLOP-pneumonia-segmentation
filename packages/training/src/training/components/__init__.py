@@ -25,7 +25,7 @@ class Training:
     def __init__(self, config: TrainingConfig):
         self.config = config
         self.best_iou = 0.0 if config.metric.metric_mode == "max" else float('inf')
-        self.device = get_device()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         self.loaders        = get_dataloaders(self.config)
         self.model          = self._get_model()
