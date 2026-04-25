@@ -17,7 +17,12 @@ def train_one_epoch(model, loader, criterion, optimizer, scheduler, epoch, devic
         with autocast(device_type=device, enabled=False):
             preds = model(images)
             if isinstance(preds, tuple):
-                loss = sum(criterion(p, masks) for p in preds) / len(preds)
+                try:
+                    loss = sum(criterion(p, masks) for p in preds) / len(preds)
+                except Exception as e:
+                    print(f"preds shapes: {[p.shape for p in preds]}")
+                    print(f"masks shape: {masks.shape}")
+                    raise e
                 preds = preds[0]  # for metric calculation
             else:
                 loss = criterion(preds, masks)
