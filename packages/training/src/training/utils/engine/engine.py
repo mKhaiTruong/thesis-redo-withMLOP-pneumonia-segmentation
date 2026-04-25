@@ -14,7 +14,7 @@ def train_one_epoch(model, loader, criterion, optimizer, scheduler, epoch, devic
         images, masks = input['image'], input['mask']
         images, masks = images.to(device), masks.to(device)
         
-        with autocast(device_type=device):
+        with autocast(device_type=device, enabled=False):
             preds = model(images)
             if isinstance(preds, tuple):
                 loss = sum(criterion(p, masks) for p in preds) / len(preds)
