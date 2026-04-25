@@ -44,8 +44,8 @@ class Training:
     def _get_model(self) -> nn.Module:
         model_name = self.config.model.model_name.lower()
         
-        if model_name == "sam2unet":
-            return self._get_foundation_model()
+        # if model_name == "sam2unet":
+        #     return self._get_foundation_model()
         
         if model_name not in MODEL_MAP:
             raise ValueError(
@@ -59,24 +59,24 @@ class Training:
         )
         return model.to(self.device)
 
-    def _get_foundation_model(self) -> nn.Module:
-        from sam2unet.SAM2UNet import SAM2UNet
-        self.sam2_path = Path("sam2_hiera_large.pt")
+    # def _get_foundation_model(self) -> nn.Module:
+    #     from sam2unet.SAM2UNet import SAM2UNet
+    #     self.sam2_path = Path("sam2_hiera_large.pt")
         
-        logger.info("Loading foundation model: SAM2-UNet")
-        logger.info(f"Checkpoint: {str(self.sam2_path)}")
+    #     logger.info("Loading foundation model: SAM2-UNet")
+    #     logger.info(f"Checkpoint: {str(self.sam2_path)}")
         
-        # Freeze backbone, train adapters only
-        model = SAM2UNet(model_cfg="sam2_hiera_l.yaml", checkpoint_path=self.sam2_path)
-        for name, param in model.named_parameters():
-            if "prompt_learn" not in name and "side" not in name and "head" not in name:
-                param.requires_grad = False
+    #     # Freeze backbone, train adapters only
+    #     model = SAM2UNet(model_cfg="sam2_hiera_l.yaml", checkpoint_path=self.sam2_path)
+    #     for name, param in model.named_parameters():
+    #         if "prompt_learn" not in name and "side" not in name and "head" not in name:
+    #             param.requires_grad = False
         
-        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        total     = sum(p.numel() for p in model.parameters())
-        logger.info(f"Trainable params: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
+    #     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    #     total     = sum(p.numel() for p in model.parameters())
+    #     logger.info(f"Trainable params: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
         
-        return model.to(self.device)
+    #     return model.to(self.device)
 
     def _get_loss_function(self):
         dice = smp.losses.DiceLoss(mode='binary')

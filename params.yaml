@@ -15,8 +15,8 @@ data_drift_params:
 prepare_base_model_params:
   model_architecture: "Unet"
   library: "segmentation_models_pytorch"
-  model_name: "sam2unet"
-  encoder: "mit_b2"
+  model_name: "unetpp"
+  encoder: "efficientnet-b5"
   encoder_weights: "imagenet"
   classes: 1
   activation: "None"
