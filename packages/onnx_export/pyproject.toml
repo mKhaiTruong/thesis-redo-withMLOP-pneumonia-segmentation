@@ -3,6 +3,7 @@ name = "pnseg-onnx_export"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
+    "pnseg-sam2unet",
     "segmentation-models-pytorch",
     "onnx",
     "onnxruntime",

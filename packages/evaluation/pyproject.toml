@@ -3,6 +3,7 @@ name = "pnseg-evaluation"
 version = "0.1.0"
 dependencies = [
     "pnseg-core",
+    "pnseg-sam2unet",
     "pnseg-onnx_export",
     "pnseg-training",
     "segmentation-models-pytorch",
