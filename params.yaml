@@ -28,7 +28,7 @@ training_params:
   patience: 5
   start_epoch: 0
   epochs: 21
-  workers: 8
+  workers: 4
   seed: 42
   image_size: 512
   is_augmentation: True
