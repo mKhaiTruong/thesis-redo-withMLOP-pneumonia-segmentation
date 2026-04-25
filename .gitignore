@@ -18,4 +18,5 @@ mlruns/
 credentials/
 mlflow.db
 .dvc/cache/
-guide.txt"resnet50.onnx" 
+guide.txt
+"resnet50.onnx" 
