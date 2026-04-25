@@ -19,4 +19,4 @@ credentials/
 mlflow.db
 .dvc/cache/
 guide.txt
-"resnet50.onnx" 
+resnet50.onnx
