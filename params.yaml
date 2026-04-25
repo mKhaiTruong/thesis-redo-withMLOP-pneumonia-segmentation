@@ -15,7 +15,7 @@ data_drift_params:
 prepare_base_model_params:
   model_architecture: "Unet"
   library: "segmentation_models_pytorch"
-  model_name: "segformer"
+  model_name: "sam2unet"
   encoder: "mit_b2"
   encoder_weights: "imagenet"
   classes: 1
@@ -23,14 +23,14 @@ prepare_base_model_params:
 
 training_params:
   lr: 0.0001
-  batch_size: 8
+  batch_size: 4
   decay: 0.0005
   patience: 5
   start_epoch: 0
   epochs: 21
   workers: 8
   seed: 42
-  image_size: 512
+  image_size: 352
   is_augmentation: True
   metric_mode: "max"
   loss_function: "focal-loss"

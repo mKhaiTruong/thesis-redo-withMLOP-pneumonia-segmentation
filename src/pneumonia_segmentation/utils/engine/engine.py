@@ -15,7 +15,12 @@ def train_one_epoch(model, loader, criterion, optimizer, scheduler, epoch, devic
         images, masks = images.to(device), masks.to(device)
         
         with autocast(device_type=device):
-            loss = criterion(model(images), masks)
+            preds = model(images)
+            if isinstance(preds, tuple):
+                loss = sum(criterion(p, masks) for p in preds) / len(preds)
+                preds = preds[0]  # for metric calculation
+            else:
+                loss = criterion(preds, masks)
 
         scaler.scale(loss).backward()
         scaler.step(optimizer)
@@ -37,7 +42,12 @@ def validate(model, loader, criterion, epoch, device):
         images, masks = input['image'], input['mask']
         images, masks = images.to(device), masks.to(device)
         outputs = model(images)
-        total_loss += criterion(outputs, masks).item()
+        if isinstance(outputs, tuple):
+            loss = sum(criterion(p, masks) for p in outputs) / len(outputs)
+            outputs = outputs[0]
+        else:
+            loss = criterion(outputs, masks)
+        total_loss += loss.item()
         iou.append(compute_iou(outputs, masks))
         
         progBar.set_postfix(iou=iou[-1])
@@ -67,7 +77,7 @@ def train_one_epoch_sanity_check(model, loader, criterion, optimizer, scheduler,
     for i in range(20):
         optimizer.zero_grad(set_to_none=True)
         with torch.amp.autocast(device_type=device, dtype=torch.float16):
-            loss = criterion(model(images), masks)
+            loss = criterion(model(images)[0], masks)
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
