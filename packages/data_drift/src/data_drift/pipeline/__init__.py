@@ -32,6 +32,7 @@ class DataDriftPipeline:
         
         if "status" in result:
             logger.info(f"Data drift status: {result['status']}")
+            data_drift.push_baseline_to_hf()
             return
         
         report_path = Path("artifacts/data_drift/drift_report.json")
@@ -46,6 +47,8 @@ class DataDriftPipeline:
             mlflow.log_metric("n_images", result["n_images"])
             mlflow.log_param("threshold", result["threshold"])
             mlflow.log_artifact(str(report_path))
+        
+        data_drift.push_baseline_to_hf()
 
 
 if __name__ == "__main__":

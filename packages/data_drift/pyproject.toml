@@ -5,6 +5,7 @@ dependencies = [
     "pnseg-core",
     "numpy",
     "mlflow",
+    "huggingface_hub",
     "python-dotenv",
 ]
 

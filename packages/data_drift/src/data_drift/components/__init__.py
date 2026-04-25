@@ -48,3 +48,38 @@ class DataDriftDetector:
             "n_images": len(img_paths),
             "threshold": float(self.config.metric.drift_threshold)
         }
+    
+    def push_baseline_to_hf(self):
+        import os
+        from pathlib import Path
+        from dotenv import load_dotenv
+        from huggingface_hub import HfApi, login
+        
+        BASELINE_PATH = self.config.baseline_dir
+        RESNET_DIR    = "resnet50.onnx"
+        REPO_ID       = "bill123mk/pneumonia-seg-weights"
+        
+        load_dotenv()
+        login(token=os.getenv("HUGGING_FACE_TOKEN"))
+        api = HfApi()
+        api.create_repo(repo_id=REPO_ID, repo_type="model", exist_ok=True)
+        
+        if BASELINE_PATH.exists():
+            api.upload_file(
+                path_or_fileobj = str(BASELINE_PATH),
+                path_in_repo    = "baseline_distribution.npy",
+                repo_id         = REPO_ID,
+            )
+            logger.info("Baseline distribution uploaded.")
+        else:
+            logger.info("WARNING: baseline_distribution.npy not found - skipping")
+        
+        if Path(RESNET_DIR).exists():
+            api.upload_file(
+                path_or_fileobj = RESNET_DIR,
+                path_in_repo    = "resnet50.onnx",
+                repo_id         = REPO_ID,
+            )
+            logger.info("Resnet50 ONNX uploaded.")
+        else:
+            logger.info("WARNING: resnet50.onnx not found - skipping")

@@ -25,7 +25,10 @@ COPY params.yaml .
 COPY prometheus.yml .
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e .
-COPY resnet50.onnx .
+
+COPY scripts/download_models.py .
+RUN pip install huggingface_hub && python download_models.py
+
 ENV PYTHONPATH=/app:/app/src
 
 EXPOSE 7860

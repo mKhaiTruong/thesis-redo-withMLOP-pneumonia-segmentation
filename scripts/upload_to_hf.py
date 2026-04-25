@@ -72,19 +72,6 @@ else:
 
 logger.info(f"Done! https://huggingface.co/{REPO_ID}")
 
-
-# -- push drift baseline --
-BASELINE_PATH = Path("artifacts/data_drift/baseline_distribution.npy")
-
-if BASELINE_PATH.exists():
-    api.upload_file(
-        path_or_fileobj = str(BASELINE_PATH),
-        path_in_repo    = "baseline_distribution.npy",
-        repo_id         = REPO_ID,
-    )
-    logger.info("Baseline distribution uploaded.")
-else:
-    logger.info("WARNING: baseline_distribution.npy not found - skipping")
     
 # -- push retrain status signal --
 import json, tempfile, time
