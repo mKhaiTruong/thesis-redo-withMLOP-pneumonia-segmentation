@@ -11,7 +11,7 @@ def train(
     model:  str = typer.Option("segformer", help="Model: [unet, unetpp, manet, segformer]"),
     encoder:str = typer.Option("mit_b2",    help="Encoder type"),    
     epochs: int = typer.Option(50,          help="Number of epochs"),
-    device: str = typer.Option("auto",      help="Device: auto, cpu, cuda"),
+    resume_from: str = typer.Option("", help="Path to checkpoint to resume from"),
 ):
     
     from training.config import ConfigurationManager
@@ -36,6 +36,15 @@ def train(
     )
     
     training = Training(config=config)
+    if resume_from:
+        import shutil
+        from pathlib import Path
+        ckpt_dir = config.model.checkpoint_dir
+        ckpt_dir.mkdir(parents=True, exist_ok=True)
+        dst = ckpt_dir / Path(resume_from).name
+        shutil.copy(resume_from, dst)
+        logger.info(f"Checkpoint copied: {resume_from} → {dst}")
+    
     with mlflow.start_run(run_name=f"{model}_{encoder}"):
         training.train()
 

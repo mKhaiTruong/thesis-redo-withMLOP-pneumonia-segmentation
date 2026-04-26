@@ -1,4 +1,5 @@
 import time, torch, json, mlflow
+from dataclasses import replace
 from pathlib import Path
 import torch.nn as nn
 import segmentation_models_pytorch as smp
@@ -40,7 +41,11 @@ class Training:
             loaders     = self.loaders, 
             optimizer   = self.optimizer
         )
+        
+        # AUTO RESUME
+        self._resume_from_checkpoint()
     
+    # HELPERS ----------
     def _get_model(self) -> nn.Module:
         model_name = self.config.model.model_name.lower()
         
@@ -82,6 +87,30 @@ class Training:
         dice = smp.losses.DiceLoss(mode='binary')
         focal = smp.losses.FocalLoss(mode='binary', alpha=self.config.metric.alpha, gamma=self.config.metric.gamma)
         return lambda preds, masks: dice(preds, masks) + focal(preds, masks)
+    
+    # ── resume training from checkpoint ───────────────────────
+    def _resume_from_checkpoint(self):
+        checkpoint_dir = self.config.model.checkpoint_dir
+        if not Path(ckpt_dir).exists():
+            return
+        
+        checkpoints = sorted(Path(ckpt_dir).glob("checkpoint_epoch_*.pth"))
+        if not checkpoints:
+            return
+        
+        latest = checkpoints[-1]
+        ckpt   = torch.load(latest, map_location=self.device, weights_only=True)
+        self.best_iou = ckpt["metric"]
+        
+        self.model.load_state_dict(ckpt["model_state_dict"])
+        self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        
+        # Override start_epoch
+        self.config = replace(
+            self.config, 
+            train=replace(self.config.train, start_epoch=ckpt["epoch"] + 1)
+        )
+        logger.info(f"Resumed from {latest.name} — epoch {ckpt['epoch']}, IoU {ckpt['metric']:.4f}")
     
     # ── training loop ─────────────────────────────────────────
     
