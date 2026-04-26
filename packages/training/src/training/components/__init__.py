@@ -91,27 +91,28 @@ class Training:
     # ── resume training from checkpoint ───────────────────────
     def _resume_from_checkpoint(self):
         checkpoint_dir = self.config.model.checkpoint_dir
-        if not Path(ckpt_dir).exists():
+        if not Path(checkpoint_dir).exists():
             return
         
-        checkpoints = sorted(Path(ckpt_dir).glob("checkpoint_epoch_*.pth"))
+        checkpoints = sorted(Path(checkpoint_dir).glob("checkpoint_epoch_*.pth"))
         if not checkpoints:
             return
         
-        latest = checkpoints[-1]
-        ckpt   = torch.load(latest, map_location=self.device, weights_only=True)
-        self.best_iou = ckpt["metric"]
+        latest        = checkpoints[-1]
+        checkpoint    = torch.load(latest, map_location=self.device, weights_only=True)
+        self.best_iou = checkpoint["metric"]
         
-        self.model.load_state_dict(ckpt["model_state_dict"])
-        self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         
         # Override start_epoch
         self.config = replace(
             self.config, 
-            train=replace(self.config.train, start_epoch=ckpt["epoch"] + 1)
+            train=replace(self.config.train, start_epoch=checkpoint["epoch"] + 1)
         )
-        logger.info(f"Resumed from {latest.name} — epoch {ckpt['epoch']}, IoU {ckpt['metric']:.4f}")
-    
+        logger.info(f"Resumed from {latest.name} — epoch {checkpoint['epoch']}")
+        logger.info(f"IoU {checkpoint['metric']:.4f}")
+        
     # ── training loop ─────────────────────────────────────────
     
     def train(self):
