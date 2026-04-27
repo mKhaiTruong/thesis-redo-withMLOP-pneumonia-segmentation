@@ -121,7 +121,6 @@ services:
   # --------------------------- INFERENCE ---------------------------
   app:
     build: .
-    image: pneumonia-seg
     ports:
       - "7860:7860"
     env_file:
