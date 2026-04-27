@@ -74,7 +74,7 @@ class Onnx:
                 1, 3, self.config.image_size, self.config.image_size
             ).to(self.device)
             
-            # export_model = self.model
+            export_model = self.model
             # if isinstance(self.model, SAM2UNet):
             #     class _Wrapper(torch.nn.Module):
             #         def forward(self, x):
