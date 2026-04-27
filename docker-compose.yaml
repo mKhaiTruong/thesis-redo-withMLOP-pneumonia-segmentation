@@ -43,42 +43,6 @@ services:
   #   volumes:
   #     - ./artifacts:/app/artifacts
 
-  # training:
-  #   build:
-  #     context: .
-  #     dockerfile: services/training/Dockerfile
-  #   ports:
-  #     - "7865:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-  #   depends_on:
-  #     - transformation
-
-  # onnx_export:
-  #   build:
-  #     context: .
-  #     dockerfile: services/onnx_export/Dockerfile
-  #   ports:
-  #     - "7866:7860"
-  #   env_file: .env
-  #   volumes:
-  #     - ./artifacts:/app/artifacts
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-
   prefect:
     image: prefecthq/prefect:3-latest
     ports:

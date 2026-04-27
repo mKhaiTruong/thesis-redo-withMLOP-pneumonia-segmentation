@@ -3,7 +3,7 @@ from prefect import flow, task
 from prefect.input import RunInput
 from prefect.flow_runs import pause_flow_run
 from core.logging import logger
-from orchestrator import MICROSERVICES, POLL_TIMEOUT
+from orchestrator import MICROSERVICES, APP_URL, POLL_TIMEOUT
 
 
 @task(name="ingestion", retries=2, retry_delay_seconds=10)
@@ -39,21 +39,36 @@ class Kaggle_Approval(RunInput):
     confirmed: bool = False
     
 @flow(name="retrain-pipeline", log_prints=True)
-def retrain_flow(app_url: str):
+def retrain_flow(app_url: str = APP_URL):
     # Node 1
     ml_pipeline()
     
     # Node 2
-    logger.info("Data ready. Go to Kaggle and train the model.")
+    import os
+    from prefect import get_run_logger
+    
+    logger = get_run_logger()
+    logger.info("=" * 50)
+    logger.info("✅ DATA READY — Ingestion + Transformation + Drift done")
+    logger.info("📋 Next steps:")
+    logger.info("   1. Go to Kaggle notebook and train:")
+    logger.info(f"   🔗 https://www.kaggle.com/code/{os.getenv('KAGGLE_USERNAME')}/{os.getenv('KAGGLE_KERNEL_SLUG')}")
+    logger.info("   2. After training completes, come back here and Resume")
+    logger.info("=" * 50)
+    
     approval = pause_flow_run(
         wait_for_input=Kaggle_Approval,
         timeout=POLL_TIMEOUT
     )
     
     if not approval.confirmed:
-        logger.warning("Training not confirmed. Stopping.")
+        logger.info("❌ Training not confirmed. Stopping.")
         return {"status": "CANCELLED"}
+    logger.info("✅ Training confirmed — reloading model...")
     
     # Node 3
-    httpx.post(f"{app_url}/reload-model", timeout=10)
-    return {"status": "RETRAINING COMPLETE"}
+    try:
+        httpx.post(f"{app_url}/reload-model", timeout=10)
+        logger.info("✅ Model reloaded successfully")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not reload model: {e} — reload manually via /reload-model")
