@@ -6,7 +6,7 @@ _REGISTRY = {
 }
 
 def get_model(config):
-    model_name = self.config.model.model_name.lower()
+    model_name = config.model.model_name.lower()
     if name not in _REGISTRY:
         raise ValueError(
             f"Model '{model_name}' not supported. Available {list(_REGISTRY.keys())}"
