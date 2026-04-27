@@ -7,9 +7,9 @@ _REGISTRY = {
 
 def get_model(config):
     model_name = config.model.model_name.lower()
-    if name not in _REGISTRY:
+    if model_name not in _REGISTRY:
         raise ValueError(
             f"Model '{model_name}' not supported. Available {list(_REGISTRY.keys())}"
         )
-    return _REGISTRY[name].build(config)
+    return _REGISTRY[model_name].build(config)
     
