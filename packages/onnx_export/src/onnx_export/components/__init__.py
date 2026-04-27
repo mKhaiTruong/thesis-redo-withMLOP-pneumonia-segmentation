@@ -74,13 +74,13 @@ class Onnx:
                 1, 3, self.config.image_size, self.config.image_size
             ).to(self.device)
             
-            export_model = self.model
-            if isinstance(self.model, SAM2UNet):
-                class _Wrapper(torch.nn.Module):
-                    def forward(self, x):
-                        return self.model(x)[0]
-                export_model        = _Wrapper()
-                export_model.model  = self.model
+            # export_model = self.model
+            # if isinstance(self.model, SAM2UNet):
+            #     class _Wrapper(torch.nn.Module):
+            #         def forward(self, x):
+            #             return self.model(x)[0]
+            #     export_model        = _Wrapper()
+            #     export_model.model  = self.model
             
             torch.onnx.export(
                 export_model, dummy_input,
