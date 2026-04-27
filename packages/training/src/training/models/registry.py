@@ -11,5 +11,5 @@ def get_model(config):
         raise ValueError(
             f"Model '{model_name}' not supported. Available {list(_REGISTRY.keys())}"
         )
-    return _REGISTRY[model_name].build(config)
+    return _REGISTRY[model_name].build_model(config)
     

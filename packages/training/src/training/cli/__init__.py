@@ -35,16 +35,17 @@ def train(
         train = replace(config.train, epochs=epochs),
     )
     
-    training = Training(config=config)
     if resume_from:
         import shutil
         from pathlib import Path
+        
         ckpt_dir = config.model.checkpoint_dir
         ckpt_dir.mkdir(parents=True, exist_ok=True)
         dst = ckpt_dir / Path(resume_from).name
         shutil.copy(resume_from, dst)
         logger.info(f"Checkpoint copied: {resume_from} → {dst}")
     
+    training = Training(config=config)
     with mlflow.start_run(run_name=f"{model}_{encoder}"):
         training.train()
 
