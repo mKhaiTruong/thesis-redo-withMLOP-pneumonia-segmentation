@@ -33,7 +33,7 @@ training_params:
   image_size: 512
   is_augmentation: True
   metric_mode: "max"
-  loss_function: "focal-loss"
+  loss_function: ["focal-loss", "dice-loss"]
   lr_scheduler: "OneCycleLR"
   alpha: 0.25
   gamma: 2.0
