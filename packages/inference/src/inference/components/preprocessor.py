@@ -12,7 +12,7 @@ class Preprocessor:
         norm = ((norm - min_val) / (max_val - min_val + 1e-5)) * 255
         norm = norm.astype(np.uint8)
         norm = cv2.resize(norm, (self.image_size, self.image_size))
-        return cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+        return cv2.applyColorMap(norm, cv2.COLORMAP_BONE)
 
     def to_tensor(self, image: np.ndarray) -> np.ndarray:
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
