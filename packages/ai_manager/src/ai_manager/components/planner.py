@@ -8,9 +8,9 @@ class Planner(BaseAIManagerComponent):
     def __init__(self, dqn_url: str = DQN_URL):
         self.url = dqn_url
         
-    def run(self, state: dict) -> str:
+    def run(self, state: dict) -> dict:
         try:
-            return httpx.post(f"{self.url}/plan", json=state, timeout=10).json()["action"]
+            return httpx.post(f"{self.url}/plan", json=state, timeout=10).json()
         except Exception:
             logger.warning("Plan failed — do_nothing")
-            return "do_nothing"
+            return {"action": "do_nothing", "q_spread": 1.0}

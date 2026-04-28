@@ -65,7 +65,7 @@ lstm_params:
 dqn_planner_params:
   n_metrics: 4 # cpu, ram, latency, drift
   output_steps: 5 # must equal to lstm_params.output_steps
-  action_size: 5
+  action_size: 8
   hidden_size: 128
   lr: 0.001
   gamma: 0.99
@@ -85,3 +85,8 @@ simulation_params:
   drift_warning: 0.3
   drift_critical: 0.5
   output_steps: 5 # must equal to lstm_params.output_steps
+
+claude_params:
+  model: "claude-haiku-4-5-20251001"
+  max_tokens: 1024
+  confidence_threshold: 0.3

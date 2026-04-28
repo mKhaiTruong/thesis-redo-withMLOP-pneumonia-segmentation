@@ -30,6 +30,10 @@ scrape_configs:
     static_configs:
       - targets: ["dqn:7860"]
 
+  - job_name: "claude_validation"
+    static_configs:
+      - targets: ["claude_validation:7860"]
+
   - job_name: "ai_manager"
     static_configs:
       - targets: ["ai_manager:7860"]

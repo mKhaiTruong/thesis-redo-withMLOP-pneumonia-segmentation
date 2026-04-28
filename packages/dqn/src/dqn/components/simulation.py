@@ -58,6 +58,15 @@ class SystemSimulation:
         elif action == 4:
             self.cpu     = 20.0
             self.latency = 0.1
+        elif action == 5:
+            self.latency = max(0, self.latency - 0.15)
+            self.cpu     = max(0, self.cpu - 10)
+        elif action == 6:
+            self.latency += 0.05
+            self.cpu     += 5
+        elif action == 7:
+            self.latency += 0.1
+            self.ram     += 5  
         
         self.cpu     = np.clip(self.cpu,     0, 100)
         self.ram     = np.clip(self.ram,     0, 100)

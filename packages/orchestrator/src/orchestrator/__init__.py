@@ -1,6 +1,6 @@
 import os
 
-APP_URL         = "http://app:7860"
+APP_URL         = os.getenv("APP_URL", "http://app:7860")
 MICROSERVICES   = {
     "ingestion":      "http://ingestion:7860/run-ingestion",
     "transformation": "http://transformation:7860/run-transformation",

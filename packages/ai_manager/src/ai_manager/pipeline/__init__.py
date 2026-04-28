@@ -13,9 +13,30 @@ def monitor():
 def analyze():
     return ComponentFactory().create("lstm_analyzer").run()
 
+
+CONFIDENCE_THRESHOLD = 0.3
 @task(name="plan", retries=2, retry_delay_seconds=5)
 def plan(state: dict):
-    return ComponentFactory().create("dqn_planner").run(state)
+    planner  = ComponentFactory().create("dqn_planner")
+    claude   = ComponentFactory().create("claude_validator")
+    
+    result   = planner.run(state)
+    action   = result["action"]
+    q_spread = result["q_spread"]
+    
+    if q_spread < CONFIDENCE_THRESHOLD:
+        logger.info(f"DQN not confident (q_spread={q_spread:.3f}), asking Claude...")
+        claude_result = claude.run(state=state, action=action, q_spread=q_spread)
+        
+        if claude_result is None:  
+            logger.warning("Claude failed, using DQN action")
+            return action
+        
+        logger.info(f"Claude: {claude_result['action']} — {claude_result['reasoning']}")
+        return claude_result["action"]
+    
+    return action
+
 
 import time
 _last_action_time = {}

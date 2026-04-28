@@ -27,7 +27,6 @@ def plan(state: dict):
     try:
         from dqn.pipeline import PlanningPipeline
         pipeline = PlanningPipeline(state=state)
-        action   = pipeline.main()
-        return {"action": action}
+        return pipeline.main()
     except Exception as e:
         raise CustomException(e, sys)

@@ -2,8 +2,11 @@ ACTIONS = {
     0: "do_nothing",
     1: "trigger_retraining",
     2: "switch_to_lighter_model",
-    3: "scale_up_service",
+    3: "scale_up_service",      # legacy
     4: "restart_service",
+    5: "scale_out_service",     # new
+    6: "scale_in_service",      # new
+    7: "swap_model_version",    # new
 }
 
 import random, math
@@ -61,14 +64,16 @@ class DQNPlanner:
         
         if random.random() < self.epsilon:
             action_idx = random.randint(0, self.config.duel_dqn_params.action_size - 1)
+            q_spread   = 0.0
         else:
             with torch.no_grad():
                 q_val       = self.online_net(state_tensor)
                 action_idx  = q_val.argmax().item()
+                q_spread    = float(q_val.max() - q_val.min())
         
         action = ACTIONS[action_idx] 
         logger.info(f"DQN action: {action} (epsilon={self.epsilon:.3f})")
-        return action
+        return {"action": action, "q_spread": q_spread}
     
     def _dict_to_tensor(self, state: dict) -> torch.Tensor:
         n = self.config.duel_dqn_params.output_steps  # 5

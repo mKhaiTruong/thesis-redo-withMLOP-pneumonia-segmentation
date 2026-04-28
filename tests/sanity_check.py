@@ -3,12 +3,13 @@ import httpx
 BASE = "http://localhost"
 
 checks = {
-    "app health":        f"{BASE}:7860/health",
-    "lstm health":       f"{BASE}:7868/health", 
-    "dqn health":        f"{BASE}:7869/health",
-    "ai_manager health": f"{BASE}:7870/health",
-    "prometheus":        f"{BASE}:9090/-/healthy",
-    "grafana":           f"{BASE}:3000/api/health",
+    "app health":               f"{BASE}:7860/health",
+    "lstm health":              f"{BASE}:7868/health", 
+    "dqn health":               f"{BASE}:7869/health",
+    "ai_manager health":        f"{BASE}:7870/health",
+    "claude_validation health": f"{BASE}:7871/health",
+    "prometheus":               f"{BASE}:9090/-/healthy",
+    "grafana":                  f"{BASE}:3000/api/health",
 }
 
 print("=== Service Health ===")

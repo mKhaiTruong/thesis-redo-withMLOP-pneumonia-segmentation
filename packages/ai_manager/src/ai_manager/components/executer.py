@@ -9,8 +9,11 @@ ACTIONS = {
     0: "do_nothing",
     1: "trigger_retraining",
     2: "switch_to_lighter_model",
-    3: "scale_up_service",
+    3: "scale_up_service",      # legacy
     4: "restart_service",
+    5: "scale_out_service",     # new
+    6: "scale_in_service",      # new
+    7: "swap_model_version",    # new
 }
 
 class Executer(BaseAIManagerComponent):
