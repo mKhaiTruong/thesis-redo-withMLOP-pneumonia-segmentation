@@ -14,24 +14,29 @@ def analyze():
     return ComponentFactory().create("lstm_analyzer").run()
 
 
-CONFIDENCE_THRESHOLD = 0.3
-@task(name="plan", retries=2, retry_delay_seconds=5)
-def plan(state: dict):
-    planner  = ComponentFactory().create("dqn_planner")
-    claude   = ComponentFactory().create("claude_validator")
+def _compute_entropy(q_values: list[float]) -> float:
+    import numpy as np
+    q = np.array(q_values)
+    # Softmax
+    q = q - q.max()  # numerical stability
+    probs = np.exp(q) / np.exp(q).sum()
+    # Entropy normalized 0-1
+    entropy = -np.sum(probs * np.log(probs + 1e-8))
+    max_entropy = np.log(len(q_values))
+    return float(entropy / max_entropy)
+
+CONFIDENCE_THRESHOLD = 0.5
+@task(name="plan")
+def plan(state: dict) -> str:
+    result  = ComponentFactory().create("dqn_planner").run(state)
+    action  = result["action"]
+    entropy = _compute_entropy(result["q_values"])
     
-    result   = planner.run(state)
-    action   = result["action"]
-    q_spread = result["q_spread"]
+    claude_result = ComponentFactory().create("claude_validator").run(
+        state=state, action=action, q_spread=entropy
+    )
     
-    if q_spread < CONFIDENCE_THRESHOLD:
-        logger.info(f"DQN not confident (q_spread={q_spread:.3f}), asking Claude...")
-        claude_result = claude.run(state=state, action=action, q_spread=q_spread)
-        
-        if claude_result is None:  
-            logger.warning("Claude failed, using DQN action")
-            return action
-        
+    if claude_result:
         logger.info(f"Claude: {claude_result['action']} — {claude_result['reasoning']}")
         return claude_result["action"]
     

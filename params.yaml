@@ -76,12 +76,12 @@ dqn_planner_params:
   target_update_freq: 100
 
 simulation_params:
-  cpu_warning: 80
-  cpu_critical: 95
-  ram_warning: 80
-  ram_critical: 95
-  latency_warning: 0.5
-  latency_critical: 1.0
+  cpu_warning: 0.8
+  cpu_critical: 0.95
+  ram_warning: 0.8
+  ram_critical: 0.95
+  latency_warning: 0.1
+  latency_critical: 0.2
   drift_warning: 0.3
   drift_critical: 0.5
   output_steps: 5 # must equal to lstm_params.output_steps
@@ -90,3 +90,4 @@ claude_params:
   model: "claude-haiku-4-5-20251001"
   max_tokens: 1024
   confidence_threshold: 0.3
+  prometheus_url: "http://localhost:9090"

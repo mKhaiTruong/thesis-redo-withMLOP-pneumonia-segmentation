@@ -17,67 +17,63 @@ class SystemSimulation:
         self.reset()
         
     def reset(self) -> np.ndarray:
-        self.cpu     = np.random.uniform(20, 50)
-        self.ram     = np.random.uniform(30, 60)
-        self.latency = np.random.uniform(0.05, 0.3)
+        self.cpu     = np.random.uniform(0.2, 0.5)
+        self.ram     = np.random.uniform(0.3, 0.6)
+        self.latency = np.random.uniform(0.01, 0.06)
         self.drift   = np.random.uniform(0.0, 0.2)
         self.step_n  = 0
         return self._get_state()
 
     def _get_state(self) -> np.ndarray:
         cpu, ram, lat, drift = self.cpu, self.ram, self.latency, self.drift
-        current   = [cpu, ram, lat, drift]
-        
+        current  = [cpu, ram, lat, drift]
         predicted = []
         for _ in range(self.config.output_steps):
-            cpu   = np.clip(cpu   + np.random.normal(0, 2),    0, 100)
-            ram   = np.clip(ram   + np.random.normal(0, 1),    0, 100)
-            lat   = np.clip(lat   + np.random.normal(0, 0.01), 0, 5)
-            drift = np.clip(drift + np.random.normal(0, 0.01), 0, 1)
+            cpu   = np.clip(cpu   + np.random.normal(0, 0.02),  0, 1)
+            ram   = np.clip(ram   + np.random.normal(0, 0.01),  0, 1)
+            lat   = np.clip(lat   + np.random.normal(0, 0.001), 0, 1)
+            drift = np.clip(drift + np.random.normal(0, 0.01),  0, 1)
             predicted += [cpu, ram, lat, drift]
-        
         return np.array(current + predicted, dtype=np.float32)
     
     def step(self, action: int) -> tuple[np.ndarray, float, bool]:
-        self.step_n += 1
-        
-        self.cpu     += np.random.normal(0, 2)
-        self.ram     += np.random.normal(0, 1)
-        self.latency += np.random.normal(0, 0.01)
+        self.step_n  += 1
+        self.cpu     += np.random.normal(0, 0.02)
+        self.ram     += np.random.normal(0, 0.01)
+        self.latency += np.random.normal(0, 0.001)
         self.drift   += np.random.normal(0, 0.01)
-        
+
         if action == 1:
             self.drift   = max(0, self.drift - 0.3)
         elif action == 2:
-            self.ram     = max(0, self.ram - 20)
-            self.cpu     = max(0, self.cpu - 15)
+            self.ram     = max(0, self.ram - 0.2)
+            self.cpu     = max(0, self.cpu - 0.15)
             self.latency += 0.05
         elif action == 3:
             self.latency = max(0, self.latency - 0.1)
-            self.ram     += 10
+            self.ram     += 0.1
         elif action == 4:
-            self.cpu     = 20.0
-            self.latency = 0.1
+            self.cpu     = 0.2
+            self.latency = 0.01
         elif action == 5:
             self.latency = max(0, self.latency - 0.15)
-            self.cpu     = max(0, self.cpu - 10)
+            self.cpu     = max(0, self.cpu - 0.1)
         elif action == 6:
             self.latency += 0.05
-            self.cpu     += 5
+            self.cpu     += 0.05
         elif action == 7:
             self.latency += 0.1
-            self.ram     += 5  
-        
-        self.cpu     = np.clip(self.cpu,     0, 100)
-        self.ram     = np.clip(self.ram,     0, 100)
-        self.latency = np.clip(self.latency, 0, 5)
+            self.ram     += 0.05
+
+        self.cpu     = np.clip(self.cpu,     0, 1)
+        self.ram     = np.clip(self.ram,     0, 1)
+        self.latency = np.clip(self.latency, 0, 1)
         self.drift   = np.clip(self.drift,   0, 1)
-        
+
         reward = self._compute_reward(action)
         done   = self.step_n >= 200 or \
-                    self.ram > self.config.ram_critical or \
-                        self.cpu > self.config.cpu_critical
-                        
+                    self.ram  > self.config.ram_critical or \
+                    self.cpu  > self.config.cpu_critical
         return self._get_state(), reward, done
     
     def _compute_reward(self, action: int) -> float:

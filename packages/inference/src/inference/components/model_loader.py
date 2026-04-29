@@ -7,21 +7,21 @@ import sys
 
 class ModelLoader:
     HF_REPO    = "bill123mk/pneumonia-seg-weights"
-    MODEL_FILE = "best_model_int8.onnx"
-    LOCAL_PATH = Path("artifacts/best_model_int8.onnx")
     
-    def __init__(self, config):
+    def __init__(self, config, model_file = f"best_model_int8.onnx"):
         self.config  = config
+        self.model_file = model_file
+        self.local_path = Path(f"artifacts/{model_file}")
         self.session = self._load()
         
     def _pull(self):
-        if not self.LOCAL_PATH.exists():
+        if not self.local_path.exists():
             logger.info("Model not found locally. Downloading from HF...")
-            self.LOCAL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            self.local_path.parent.mkdir(parents=True, exist_ok=True)
             
             hf_hub_download(
                 repo_id     = self.HF_REPO,
-                filename    = self.MODEL_FILE,
+                filename    = self.model_file,
                 local_dir   = "artifacts",
                 local_dir_use_symlinks=False
             )
@@ -33,10 +33,10 @@ class ModelLoader:
         try:
             self._pull()
             session = ort.InferenceSession(
-                str(self.LOCAL_PATH),
+                str(self.local_path),
                 providers=["CPUExecutionProvider"]
             )
-            logger.info(f"ONNX model loaded from {self.LOCAL_PATH}")
+            logger.info(f"ONNX model loaded from {self.local_path}")
             return session
         except Exception as e:
             raise CustomException(e, sys)
@@ -46,6 +46,6 @@ class ModelLoader:
         return self.session.run(None, inputs)[0]
     
     def reload(self):
-        self.LOCAL_PATH.unlink(missing_ok=True)
+        self.local_path.unlink(missing_ok=True)
         self.session = self._load()
         logger.info("Model reloaded.")

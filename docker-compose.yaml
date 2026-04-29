@@ -98,7 +98,7 @@ services:
   app:
     build: .
     # ports:
-    #   - "7860:7860"
+    #   - "7880:7860"
     env_file:
       - .env
     deploy:

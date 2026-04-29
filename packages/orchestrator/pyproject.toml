@@ -5,7 +5,6 @@ dependencies = [
     "pnseg-core",
     "httpx",
     "docker",
-    "docker-composer",
     "prefect",
 ]
 

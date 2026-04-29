@@ -151,14 +151,14 @@ def reload_model():
         raise CustomException(e, sys)
 
 @app.post("/switch-model")
-def switch_model(model_type: str = "int8"):
+def switch_model(model_file: str = "best_model_int8.onnx"):
+    from inference.components.model_loader import ModelLoader
+    
     try:
-        path = f"artifacts/best_model_{model_type}.onnx"
-        if not Path(path).exists():
-            raise HTTPException(status_code=404, detail=f"Model not found: {path}")
-        ml_models["model"].model.session = ort.InferenceSession(
-            path, providers=["CPUExecutionProvider"]
+        ml_models["model"].model = ModelLoader(
+            config     = ml_models["model"].model.config,
+            model_file = model_file
         )
-        return {"status": "switched", "model": path}
+        return {"status": "switched", "model": f"{model_file}"}
     except Exception as e:
         raise CustomException(e, sys)

@@ -73,19 +73,23 @@ class DQNPlanner:
         
         action = ACTIONS[action_idx] 
         logger.info(f"DQN action: {action} (epsilon={self.epsilon:.3f})")
-        return {"action": action, "q_spread": q_spread}
+        return {
+            "action": action, 
+            "q_spread": q_spread,
+            "q_values": q_val.squeeze().tolist()
+        }
     
     def _dict_to_tensor(self, state: dict) -> torch.Tensor:
         n = self.config.duel_dqn_params.output_steps  # 5
         values = (
-            state.get("current_cpu",         [0.0]) +
-            state.get("current_ram",         [0.0]) +
-            state.get("current_latency",     [0.0]) +
-            state.get("current_drift",       [0.0]) +
-            state.get("predicted_cpu",       [0.0]*n) +
-            state.get("predicted_ram",       [0.0]*n) +
-            state.get("predicted_latency",   [0.0]*n) +
-            state.get("predicted_drift",     [0.0]*n)
+            [v / 100.0  for v in state.get("current_cpu",           [0.0])] +
+            [v / 1024.0 for v in state.get("current_ram",           [0.0])] +
+            [v / 5.0    for v in state.get("current_latency",       [0.0])] +
+            [v / 100.0  for v in state.get("current_drift",         [0.0])] +
+            [v / 100.0  for v in state.get("predicted_cpu",         [0.0])] +
+            [v / 1024.0 for v in state.get("predicted_ram",         [0.0])] +
+            [v / 5.0    for v in state.get("predicted_latency",     [0.0])] +
+            [v / 100.0  for v in state.get("predicted_drift",       [0.0])]
         )
         return torch.tensor(values, dtype=torch.float32).unsqueeze(0).to(self.device)
     # ------------------------------------------------------------------------------------

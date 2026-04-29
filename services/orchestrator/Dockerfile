@@ -2,18 +2,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    curl \
+RUN apt-get update && apt-get install -y curl \
+    && curl -fsSL https://get.docker.com | sh \
     && rm -rf /var/lib/apt/lists/*
-
+    
 COPY packages/core ./packages/core
 RUN pip install -e ./packages/core
-
+    
 COPY packages/orchestrator ./packages/orchestrator
 RUN pip install -e ./packages/orchestrator
-
+    
 COPY services/orchestrator ./services/orchestrator
 COPY config ./config
+COPY docker-compose.yaml .
 COPY params.yaml .
 
 ENV PREFECT_API_URL=http://prefect:4200/api

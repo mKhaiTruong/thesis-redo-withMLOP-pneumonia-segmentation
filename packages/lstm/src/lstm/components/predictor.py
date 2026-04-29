@@ -104,9 +104,13 @@ class LSTM_Predictor_:
         }
         
     def get_current_state(self) -> dict:
+        def safe_last(values: list[float]) -> float:
+            val = values[-1]
+            return val if np.isfinite(val) else 0.0
+    
         return {
-            "current_cpu":     [self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100')[-1]],
-            "current_ram":     [self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024')[-1]],
-            "current_latency": [self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))')[-1]],
-            "current_drift":   [self._query_prometheus('inference_drift_score{job="app"}')[-1]],
+            "current_cpu":     [safe_last(self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100'))],
+            "current_ram":     [safe_last(self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024'))],
+            "current_latency": [safe_last(self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))'))],
+            "current_drift":   [safe_last(self._query_prometheus('inference_drift_score{job="app"}'))],
         }

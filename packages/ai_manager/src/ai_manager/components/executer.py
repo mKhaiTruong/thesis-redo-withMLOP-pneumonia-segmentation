@@ -19,8 +19,8 @@ ACTIONS = {
 class Executer(BaseAIManagerComponent):
     def run(self, action: str) -> dict:
         logger.info(f"Executing action: {action}")
-        if action not in ACTIONS:
-            raise ValueError(f"Unknown action: {action}. Available: {list(ACTIONS.keys())}")
+        if action not in ACTIONS.values():
+            raise ValueError(f"Unknown action: {action}. Available: {list(ACTIONS.values())}")
         
         try:
             if action == "do_nothing":

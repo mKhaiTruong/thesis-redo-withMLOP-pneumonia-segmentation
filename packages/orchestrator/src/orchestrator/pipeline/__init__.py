@@ -37,10 +37,10 @@ class OrchestratorPipeline:
             return _scale_app(1)
         elif action == "swap_model_version":
             target      = "fp32" if self.current_model == "int8" else "int8"
-            model_type  = "fp32" if self.current_model == "int8" else "int8"
+            model_file  = "best_model_int8.onnx" if target == "int8" else "best_model.onnx"
             
             self.current_model = target
-            return _swap_model_version(model_type=model_type)
+            return _swap_model_version(model_file=model_file)
         
         else:
             return {"status": f"UNKNOWN ACTION -> {action}"}
