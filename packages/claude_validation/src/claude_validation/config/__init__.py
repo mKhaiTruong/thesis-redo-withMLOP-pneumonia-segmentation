@@ -12,9 +12,13 @@ class ConfigurationManger:
         create_directories([self.config.artifacts_root])
     
     def get_claude_config(self) -> ClaudeValidationConfig:
+        config = self.config.claude_config
         params = self.params.claude_params
+        create_directories([config.root_dir])
         
         return ClaudeValidationConfig(
+            root_dir     = Path(config.root_dir),
+            history_path = Path(config.root_dir) / "decision_history.json",
             params = ClaudeParams(
                 model       = params.model,
                 max_tokens  = params.max_tokens,

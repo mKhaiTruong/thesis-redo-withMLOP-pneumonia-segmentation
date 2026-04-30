@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 @dataclass(frozen=True)
 class ClaudeParams:
@@ -8,4 +9,6 @@ class ClaudeParams:
 
 @dataclass(frozen=True)
 class ClaudeValidationConfig:
-    params: ClaudeParams
+    root_dir:       Path
+    history_path:   Path
+    params:         ClaudeParams

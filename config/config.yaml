@@ -32,3 +32,6 @@ lstm_config:
 
 dqn_planner_config:
   root_dir: artifacts/dqn_planner
+
+claude_config:
+  root_dir: artifacts/claude
