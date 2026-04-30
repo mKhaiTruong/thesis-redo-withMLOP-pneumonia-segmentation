@@ -1,0 +1,12 @@
+[project]
+name = "pnseg-claude_architecture"
+version = "0.1.0"
+dependencies = [
+    "pnseg-core",
+    "anthropic",
+    "python-dotenv",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["claude_architecture*"]

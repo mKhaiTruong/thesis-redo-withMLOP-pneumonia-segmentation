@@ -4,10 +4,13 @@ from orchestrator import MICROSERVICES, APP_URL
 from orchestrator.components import retrain_flow, ml_pipeline
 from orchestrator.pipeline.action_helpers import _scale_app, _swap_model_version
 
+_current_model = "int8"
+_model_history = []
+        
 class OrchestratorPipeline:
     def __init__(self):
-        self.current_model = "int8"
-        
+        pass
+    
     def run_full_pipeline(self):
         ml_pipeline()
 
@@ -18,6 +21,8 @@ class OrchestratorPipeline:
         
     # ACTION BEHAVIOR
     def execute_action(self, action: str) -> dict:
+        global _current_model, _model_history
+        
         if action == "trigger_retraining":
             retrain_flow(app_url=APP_URL)
             return {"status": "RETRAINING TRIGGERED"}
@@ -36,14 +41,19 @@ class OrchestratorPipeline:
         elif action == "scale_in_service":
             return _scale_app(1)
         elif action == "swap_model_version":
-            target      = "fp32" if self.current_model == "int8" else "int8"
+            target      = "fp32" if _current_model== "int8" else "int8"
             model_file  = "best_model_int8.onnx" if target == "int8" else "best_model.onnx"
             
-            self.current_model = target
+            _model_history.append(_current_model)
+            _current_model = target
             return _swap_model_version(model_file=model_file)
-        
+        elif action == "rollback":
+            if len(_model_history) > 0:
+                prev = _model_history.pop()
+                file = "best_model_int8.onnx" if prev == "int8" else "best_model.onnx"
+                
+                _current_model = prev
+                return _swap_model_version(model_file=file)
+            return {"status": "NOTHING TO ROLLBACK"}
         else:
             return {"status": f"UNKNOWN ACTION -> {action}"}
-        
-    
-    

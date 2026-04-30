@@ -17,3 +17,9 @@ class LSTM_Predictor_Config:
     root_dir:       Path
     model_dir:      Path
     lstm_params:    LSTM_Params_Config
+
+@dataclass
+class MetricConfig:
+    name:    str
+    query:   str
+    scale:   float

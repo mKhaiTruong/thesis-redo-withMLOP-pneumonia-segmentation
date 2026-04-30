@@ -76,7 +76,7 @@ class ClaudeValidation:
         - CPU:         {metrics.get('current_cpu', [0.0])[0]}%
         - RAM:         {metrics.get('current_ram', [0.0])[0]} Mb
         - Latency:     {metrics.get('current_latency', [0.0])[0]}s
-        - Drift score: {metrics.get('current_latency', [0.0])[0]} (threshold: {self.config.params.confidence_threshold})
+        - Drift score: {metrics.get('current_drift', [0.0])[0]} (threshold: {self.config.params.confidence_threshold})
 
         DQN suggestion: {dqn_suggestion} (confidence: {dqn_confidence:.2f})
         Low confidence means DQN is uncertain — use your judgment.

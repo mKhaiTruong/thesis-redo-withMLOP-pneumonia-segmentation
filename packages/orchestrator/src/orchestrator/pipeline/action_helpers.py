@@ -49,13 +49,14 @@ def _get_compose_project() -> str:
 # Swap model
 def _swap_model_version(model_file: str = None) -> dict:
     try:
+        for attempt in range(3):
         # Switch model
-        res = httpx.post(
-            f"{APP_URL}/switch-model",
-            params={"model_file": model_file},
-            timeout=10
-        )
-        res.raise_for_status()
+            res = httpx.post(
+                f"{APP_URL}/switch-model",
+                params={"model_file": model_file},
+                timeout=60
+            )
+            res.raise_for_status()
         
         # Health check after swapping
         health = httpx.get(f"{APP_URL}/health", timeout=10)

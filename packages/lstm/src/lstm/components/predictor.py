@@ -1,12 +1,11 @@
 import torch
-import httpx
 import numpy as np
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from core.logging import logger
 from lstm import LSTM_Predictor_Config
 from lstm.model import LSTM_Predictor
+from lstm.utils.query_prometheus import _query_prometheus
+from lstm.utils.metrics import METRICS
 
 class LSTM_Predictor_:
     def __init__(self, config: LSTM_Predictor_Config, 
@@ -39,61 +38,33 @@ class LSTM_Predictor_:
         logger.info("LSTM model loaded")
         
         return self.model
-    
-    def _query_prometheus(self, query: str) -> list[float]:
-        end     = datetime.now(timezone.utc)
-        start   = end - timedelta(minutes=self.input_steps * 15 // 60 + 5)
-        
-        response = httpx.get(
-            f"{self.prometheus_url}/api/v1/query_range",
-            params={
-                "query": query,
-                "start": start.isoformat(),
-                "end":   end.isoformat(),
-                "step": "15s"
-            }
-        )
-        
-        body = response.json()
-        
-        # --- debug ---
-        if body.get("status") != "success":
-            logger.warning(f"Prometheus query failed | query={query} | response={body}")
-            return [0.0] * self.input_steps
-        
-        result = body["data"]["result"]
-        if not result:
-            logger.warning(f"Prometheus empty result | query={query}")
-            return [0.0] * self.input_steps
-        
-        values = [float(v[1]) for v in result[0]["values"]]
-        if len(values) < self.input_steps:
-            values = [values[0]] * (self.input_steps - len(values)) + values
-        return values[-self.input_steps:]
-
 
     def predict(self) -> dict:
-        cpu     = self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100')
-        ram     = self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024')
-        latency = self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))')
-        drift   = self._query_prometheus('inference_drift_score{job="app"}')
-        
-        metrics = torch.tensor(
-            list(zip(cpu, ram, latency, drift)),
-            dtype=torch.float32
+        all_metrics = self._query_all()
+        metrics     = torch.tensor(
+            list(zip(*all_metrics)),
+            dtype   = torch.float32
         ).unsqueeze(0).to(self.device)
         
-        data = (metrics - self.mean.to(self.device)) / (self.std.to(self.device) + 1e-8)
+        data = torch.clamp(metrics, 0.0, 1.0)
+        logger.info(f"Normalized input sample: {data[0, -1, :].tolist()}")
         with torch.no_grad():
             pred = self.model(data)
         
         # Denormalize
-        pred = pred * self.std.to(self.device) + self.mean.to(self.device)
+        pred = torch.clamp(pred, 0.0, 1.0)
         pred = pred.cpu().numpy()
         
         if not np.isfinite(pred).all():
             logger.warning("LSTM predicted NaN/inf — returning zeros")
-            pred = np.zeros_like(pred)
+            self.model = self._load_model()
+            return {
+                "predicted_cpu":     [0.0] * self.output_steps,
+                "predicted_ram":     [0.0] * self.output_steps,
+                "predicted_latency": [0.0] * self.output_steps,
+                "predicted_drift":   [0.0] * self.output_steps,
+                "steps":             self.output_steps
+            }
         
         return {
             "predicted_cpu":     pred[0, :, 0].tolist(),
@@ -104,13 +75,18 @@ class LSTM_Predictor_:
         }
         
     def get_current_state(self) -> dict:
-        def safe_last(values: list[float]) -> float:
-            val = values[-1]
-            return val if np.isfinite(val) else 0.0
-    
+        all_metrics = self._query_all()
         return {
-            "current_cpu":     [safe_last(self._query_prometheus('rate(process_cpu_seconds_total{job="app"}[1m]) * 100'))],
-            "current_ram":     [safe_last(self._query_prometheus('process_resident_memory_bytes{job="app"} / 1024 / 1024'))],
-            "current_latency": [safe_last(self._query_prometheus('histogram_quantile(0.95, rate(service_request_latency_seconds_bucket{job="app"}[5m]))'))],
-            "current_drift":   [safe_last(self._query_prometheus('inference_drift_score{job="app"}'))],
+            f"current_{m.name}": [vals[-1] if np.isfinite(vals[-1]) else 0.0]
+            for m, vals in zip(METRICS, all_metrics)
         }
+        
+    def _query_all(self) -> list[list[float]]:
+        return [
+            _query_prometheus(
+                query = m.query, 
+                scale = m.scale, 
+                input_steps     = self.output_steps, 
+                prometheus_url  = self.prometheus_url)
+            for m in METRICS
+        ]
