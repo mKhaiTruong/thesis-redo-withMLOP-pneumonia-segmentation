@@ -8,6 +8,7 @@ checks = {
     "dqn health":               f"{BASE}:7869/health",
     "ai_manager health":        f"{BASE}:7870/health",
     "claude_validation health": f"{BASE}:7871/health",
+    "claude_architect health":  f"{BASE}:7872/health",
     "prometheus":               f"{BASE}:9090/-/healthy",
     "grafana":                  f"{BASE}:3000/api/health",
 }

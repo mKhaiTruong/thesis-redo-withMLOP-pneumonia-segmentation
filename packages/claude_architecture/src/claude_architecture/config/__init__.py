@@ -12,12 +12,17 @@ class ConfigurationManager:
         create_directories([self.config.artifacts_root])
     
     def get_claude_architecture_config(self) -> ClaudeArchitectureConfig:
+        config = self.config.claude_config
         params = self.params.claude_params
+        create_directories([config.root_dir])
         
         return ClaudeArchitectureConfig(
-            prometheus_url = params.prometheus_url,
+            root_dir     = Path(config.root_dir),
+            history_path = Path(config.root_dir) / "architecture_history.json",
+            prometheus_url   = params.prometheus_url,
+            orchestrator_url = params.orchestrator_url,
             params = LLMParams(
-                model       = params.model,
-                max_tokens  = params.max_tokens,
+                model        = params.model,
+                max_tokens   = params.max_tokens,
             )
         )

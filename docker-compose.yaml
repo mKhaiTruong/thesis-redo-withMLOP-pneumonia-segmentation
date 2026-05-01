@@ -103,6 +103,7 @@ services:
     env_file: .env
     depends_on:
       - prometheus
+      - orchestrator
 
   # --------------------------- INFERENCE ---------------------------
   app:
@@ -127,9 +128,17 @@ services:
       - app
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana
     ports:
       - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
     depends_on:
       - prometheus
 
@@ -157,3 +166,6 @@ services:
       - claude_validation
       - orchestrator
       - prometheus
+
+volumes:
+  grafana_data:

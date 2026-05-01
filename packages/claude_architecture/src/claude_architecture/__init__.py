@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 @dataclass(frozen=True)
 class LLMParams:
@@ -7,5 +8,8 @@ class LLMParams:
 
 @dataclass(frozen=True)
 class ClaudeArchitectureConfig:
-    prometheus_url: str
+    root_dir:           Path
+    history_path:       Path
+    prometheus_url:     str
+    orchestrator_url:   str
     params:         LLMParams
