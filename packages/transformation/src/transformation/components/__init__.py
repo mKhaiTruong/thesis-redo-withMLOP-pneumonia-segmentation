@@ -1,4 +1,8 @@
 import os, sys
+from dotenv import load_dotenv
+load_dotenv()
+os.environ["KAGGLE_KEY"] = os.getenv("KAGGLE_API_TOKEN", "")
+            
 from core.logging import logger
 from core.exception import CustomException
 
@@ -71,9 +75,6 @@ class DataTransformation:
     def push_to_kaggle(self, message: str = "auto update") -> None:
         try:
             import kagglehub
-            from dotenv import load_dotenv
-            load_dotenv()
-            
             handle = f"{os.getenv('KAGGLE_USERNAME')}/{os.getenv('KAGGLE_DATASET_SLUG')}"
             kagglehub.dataset_upload(handle, self.config.root_dir, version_notes=message)
             

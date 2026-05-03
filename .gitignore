@@ -21,3 +21,4 @@ mlflow.db
 guide.txt
 resnet50.onnx
 packages/sam2unet/
+k8s/secrets.yaml

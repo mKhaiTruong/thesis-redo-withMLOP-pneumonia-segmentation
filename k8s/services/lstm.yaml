@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lstm
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lstm
+  template:
+    metadata:
+      labels:
+        app: lstm
+    spec:
+      containers:
+        - name: lstm
+          image: bill123mk/pneumonia_mlops:lstm
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lstm
+spec:
+  selector:
+    app: lstm
+  ports:
+    - port: 7860
+      targetPort: 7860
+  type: ClusterIP

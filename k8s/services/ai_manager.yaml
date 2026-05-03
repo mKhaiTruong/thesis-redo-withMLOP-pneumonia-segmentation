@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-manager
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-manager
+  template:
+    metadata:
+      labels:
+        app: ai-manager
+    spec:
+      containers:
+        - name: ai-manager
+          image: bill123mk/pneumonia_mlops:ai_manager
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes: []
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-manager
+spec:
+  selector:
+    app: ai-manager
+  ports:
+    - port: 7860
+      targetPort: 7860
+  type: ClusterIP

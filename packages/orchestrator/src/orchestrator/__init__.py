@@ -4,7 +4,7 @@ APP_URL         = os.getenv("APP_URL", "http://app:7860")
 MICROSERVICES   = {
     "ingestion":      "http://ingestion:7860/run-ingestion",
     "transformation": "http://transformation:7860/run-transformation",
-    "data_drift":     "http://data_drift:7860/run-data-drift",
+    "data_drift":     "http://data-drift:7860/run-data-drift",
 }
 
 HF_REPO_ID      = "bill123mk/pneumonia-seg-weights"

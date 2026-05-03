@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transformation
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transformation
+  template:
+    metadata:
+      labels:
+        app: transformation
+    spec:
+      containers:
+        - name: transformation
+          image: bill123mk/pneumonia_mlops:transformation
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transformation
+spec:
+  selector:
+    app: transformation
+  ports:
+    - port: 7860
+      targetPort: 7860
+  type: ClusterIP

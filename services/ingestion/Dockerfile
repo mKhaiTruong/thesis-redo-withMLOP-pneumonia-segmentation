@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+ENV PIP_NO_CACHE_DIR=1
+
 COPY packages/core ./packages/core
 RUN pip install -e ./packages/core
 

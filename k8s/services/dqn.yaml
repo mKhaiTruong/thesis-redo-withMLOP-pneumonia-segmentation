@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dqn
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dqn
+  template:
+    metadata:
+      labels:
+        app: dqn
+    spec:
+      containers:
+        - name: dqn
+          image: bill123mk/pneumonia_mlops:dqn
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dqn
+spec:
+  selector:
+    app: dqn
+  ports:
+    - port: 7860
+      targetPort: 7860
+  type: ClusterIP

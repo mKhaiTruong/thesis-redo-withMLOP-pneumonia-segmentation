@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-validation
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: claude-validation
+  template:
+    metadata:
+      labels:
+        app: claude-validation
+    spec:
+      containers:
+        - name: claude-validation
+          image: bill123mk/pneumonia_mlops:claude_validation
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-validation
+spec:
+  selector:
+    app: claude-validation
+  ports:
+    - port: 7860
+      targetPort: 7860
+  type: ClusterIP

@@ -9,6 +9,10 @@ app = FastAPI()
 pipeline = DataIngestionPipeline()
 instrument_app(app, service_name="ingestion")
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.post("/run-ingestion")
 def run_ingestion():
     try: 
