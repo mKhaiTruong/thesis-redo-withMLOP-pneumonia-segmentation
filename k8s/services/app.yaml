@@ -1,39 +1,45 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-manager
+  name: app
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-manager
+      app: app
   template:
     metadata:
       labels:
-        app: ai-manager
+        app: app
     spec:
       containers:
-        - name: ai-manager
-          image: bill123mk/pneumonia_mlops:ai-manager
+        - name: app
+          image: bill123mk/pneumonia_mlops:app
           imagePullPolicy: Always
           ports:
             - containerPort: 7860
-          env:
-            - name: PREFECT_API_URL
-              value: "http://prefect:4200/api"
           envFrom:
             - secretRef:
                 name: app-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai-manager
+  name: app
 spec:
   selector:
-    app: ai-manager
+    app: app
   ports:
     - port: 7860
       targetPort: 7860
   type: ClusterIP
+  
+# (k3d/x86)

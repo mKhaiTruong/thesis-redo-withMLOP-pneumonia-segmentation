@@ -20,6 +20,7 @@ class ConfigurationManager:
             root_dir     = Path(config.root_dir),
             history_path = Path(config.root_dir) / "architecture_history.json",
             prometheus_url   = params.prometheus_url,
+            lstm_url     = params.lstm_url,
             orchestrator_url = params.orchestrator_url,
             params = LLMParams(
                 model        = params.model,

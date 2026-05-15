@@ -13,6 +13,7 @@ spec:
       labels:
         app: orchestrator
     spec:
+      serviceAccountName: orchestrator-sa
       containers:
         - name: orchestrator
           image: bill123mk/pneumonia_mlops:orchestrator

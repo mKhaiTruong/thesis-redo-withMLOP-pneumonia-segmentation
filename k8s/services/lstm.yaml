@@ -12,6 +12,10 @@ spec:
     metadata:
       labels:
         app: lstm
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "7860"
+        prometheus.io/path:   "/metrics"
     spec:
       containers:
         - name: lstm
@@ -19,12 +23,29 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 7860
+          env:
+            - name: PROMETHEUS_URL
+              value: "http://prometheus:9090"
+            - name: MODEL_DIR
+              value: "/app/artifacts/lstm"
           envFrom:
             - secretRef:
                 name: app-secrets
           volumeMounts:
             - name: artifacts
               mountPath: /app/artifacts
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7860
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7860
+            initialDelaySeconds: 30
+            periodSeconds: 20
       volumes:
         - name: artifacts
           persistentVolumeClaim:

@@ -60,7 +60,7 @@ app.add_middleware(
 )
 
 # Prometheus
-from core.prometheus_metrics import instrument_app, DRIFT_SCORE, IS_DRIFT
+from core.prometheus_metrics import *
 instrument_app(app, service_name="app")
 
 @app.get("/", response_class=HTMLResponse)
@@ -162,3 +162,9 @@ def switch_model(model_file: str = "best_model_int8.onnx"):
         return {"status": "switched", "model": f"{model_file}"}
     except Exception as e:
         raise CustomException(e, sys)
+
+@app.post("/predict-mock")
+async def predict_mock(latency: float = 1.5):
+    REQUEST_LATENCY.labels(service="app", endpoint="/predict").observe(latency)
+    REQUEST_COUNT.labels(service="app", endpoint="/predict", status=200).inc()
+    return {"status": "ok", "mock": True}

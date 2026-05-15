@@ -19,6 +19,10 @@ Segmentation Model Pytorch · ONNX INT8 · FastAPI · DVC · MLflow · Prefect �
 
 [![DagsHub](https://img.shields.io/badge/MLflow-DagsHub-orange)](https://dagshub.com/minhkhai0402/thesis-redo-withMLOP-pneumonia-segmentation.mlflow/)
 
+![k3d](https://img.shields.io/badge/Kubernetes-k3d-326CE5?logo=kubernetes)
+![Traefik](https://img.shields.io/badge/Ingress-Traefik-EF3B24?logo=traefikproxy)
+![Claude](https://img.shields.io/badge/AI_Architect-Claude_Haiku-8A2BE2)
+
 ---
 
 ## Demo
@@ -28,10 +32,14 @@ Segmentation Model Pytorch · ONNX INT8 · FastAPI · DVC · MLflow · Prefect �
 Upload a COVID-19 CT scan → get back a segmentation mask highlighting infected lung regions (JET/BONE colormap, configurable via `params.yaml`).
 
 With lung input:
-<img width="2470" height="1172" alt="Image" src="https://github.com/user-attachments/assets/cea985a9-40c1-4bdb-b96e-0c2545370e00" />
+<div align="center">
+  <img width="75%" alt="Image" src="https://github.com/user-attachments/assets/cea985a9-40c1-4bdb-b96e-0c2545370e00" />
+</div>
 
 With anomaly input:
-<img width="2452" height="1154" alt="Image" src="https://github.com/user-attachments/assets/b26534d9-190b-4ef3-8a44-43ef4e50ded5" />
+<div align="center">
+  <img width="75%" alt="Image" src="https://github.com/user-attachments/assets/b26534d9-190b-4ef3-8a44-43ef4e50ded5" />
+</div>
 
 ---
 
@@ -67,11 +75,15 @@ Latest model: **UNet++ EfficientNet-B5** (90 epochs, IoU best: 0.7361 checkpoint
 
 > INT8 is slower than FP32 due to UNet++ MatMul layers not being efficiently quantized. FP32 is used for production inference.
 
-<img width="2504" height="1002" alt="Image" src="https://github.com/user-attachments/assets/1f1a46e7-df4d-4e81-82be-d50fb462d3f0" />
+<div align="center">
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/1f1a46e7-df4d-4e81-82be-d50fb462d3f0" />
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/a8dd110a-c3a3-4478-be8e-b882780e6e6e" />
+</div>
 
-<img width="944" height="700" alt="Image" src="https://github.com/user-attachments/assets/e012e0cc-7eda-4102-ac4d-fae69d06f660" />
+<div align="center">
+  <img width="50%" alt="Image" src="https://github.com/user-attachments/assets/e012e0cc-7eda-4102-ac4d-fae69d06f660" />
+</div>
 
-<img width="2486" height="1186" alt="Image" src="https://github.com/user-attachments/assets/a8dd110a-c3a3-4478-be8e-b882780e6e6e" />
 
 ---
 
@@ -84,23 +96,42 @@ service flow:         train                               app          (FastAPI 
 ingestion ->          -> onnx export            ->        ai_manager   (MAPE-K loop)
 transformation ->     -> eval                             orchestrator (Prefect pipeline)
 data_drift            -> upload HF Model                  lstm         (state prediction)
-                                                          dqn          (action planning)
+                                                          dqn          (action planning) (legacy)
+                                                          claude-arch  (autonomous decisions)
 data drift result ->                                      prometheus   (metrics scraping)
   Huggingface Models                                      grafana      (dashboard)
                                                           prefect      (workflow UI)
 transformation result
   -> Kaggle Dataset
 ```
-
 ---
 
 ### MAPE-K Autonomous Loop (every 5 min)
 
 ```
-Monitor  → query Prometheus: cpu, ram, latency, drift_score
-Analyze  → LSTM: predict next 5 steps from 30-step time series
-Plan     → DQN: select action from 24-feature state vector
-Execute  → cooldown check (300s) → POST orchestrator/execute/{action}
+Monitor  -> query Prometheus: ram, latency, drift_score, requests
+Analyze  -> LSTM: predict next 5 minutes from 30-step time series
+output: predicted_{ram, latency, drift, requests}
+Plan     -> Claude Architecture: reason over current + predicted state
+proactive decisions — act before thresholds are breached
+Execute  -> cooldown check (300s) → POST orchestrator/execute/{action}
+
+Actions:
+  spawn     → scale_out_service     (High latency)     
+  swap      → swap_model_version    (drift > 0.6 OR predicted to breach)
+  rollback  → rollback              (latency spiked >2x after recent action)
+  none      → all metrics within thresholds
+
+Claude Architecture maintains decision history (last 10 decisions) and reasons
+with full context: current metrics + LSTM predictions + past actions.
+```
+
+#### Legacy: DQN Action Planning *(experimental, not in production)*
+
+```
+[LEGACY] Plan → DQN: select action from 24-feature state vector
+trained on synthetic data, replaced by Claude Architecture
+reasoning due to reward signal limitations in production
 
 Actions:
   trigger_retraining      → Prefect retrain_flow (3-node pipeline)
@@ -108,8 +139,18 @@ Actions:
   scale_up_service        → run full ml_pipeline
   restart_service         → POST app/reload-model
 ```
-
 ---
+
+## Kubernetes Deployment (k3d)
+
+Services run on a local k3d cluster with production-grade configuration:
+
+- **Ingress:** Traefik with strip-prefix middleware, accessible via `pneumonia.local`
+- **Storage:** PersistentVolumes for model artifacts, Grafana state, decision history
+- **Secrets:** Injected via `kubectl create secret --from-env-file`, never hardcoded
+- **RBAC:** ServiceAccount + ClusterRole for orchestrator pod-management permissions
+- **Observability:** Prometheus scraping all services, Grafana dashboards provisioned via API
+
 
 ### Prefect Retraining Pipeline
 
@@ -119,11 +160,12 @@ Node 2 [Pause]:  wait for dev to train on Kaggle → Resume when done
 Node 3 [Auto]:   reload model from HF
 ```
 
-<img width="2543" height="1171" alt="Image" src="https://github.com/user-attachments/assets/e547c26d-d031-4b24-bea5-6804da9fe5f6" />
+<div align="center">
+  <img width="32%" alt="Image" src="https://github.com/user-attachments/assets/e547c26d-d031-4b24-bea5-6804da9fe5f6" />
+  <img width="32%" alt="Image" src="https://github.com/user-attachments/assets/24f613ad-15df-4888-b144-b5133562b7ba" />
+  <img width="32%" alt="Image" src="https://github.com/user-attachments/assets/4ee96086-4f9b-4a64-a7f4-b5dbdc841948" />
+</div>
 
-<img width="2100" height="1120" alt="Image" src="https://github.com/user-attachments/assets/24f613ad-15df-4888-b144-b5133562b7ba" />
-
-<img width="2248" height="1168" alt="Image" src="https://github.com/user-attachments/assets/4ee96086-4f9b-4a64-a7f4-b5dbdc841948" />
 
 ## Tech Stack
 
@@ -139,6 +181,8 @@ Node 3 [Auto]:   reload model from HF
 ![Grafana](https://img.shields.io/badge/Grafana-dashboard-orange)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-black)
 ![HuggingFace](https://img.shields.io/badge/HuggingFace-Spaces-yellow)
+![Anthropic](https://img.shields.io/badge/Anthropic-Claude_Haiku-8A2BE2)
+![k3d](https://img.shields.io/badge/k3d-Kubernetes-326CE5?logo=kubernetes)
 
 **Core:** Python 3.12 · PyTorch · segmentation-models-pytorch · ONNX Runtime
 
@@ -148,7 +192,9 @@ Node 3 [Auto]:   reload model from HF
 
 **Monitoring:** Prometheus · Grafana · prometheus-fastapi-instrumentator
 
-**AI Loop:** LSTM (state prediction) · DQN (action planning) · MAPE-K
+**AI Loop:** LSTM (metric forecasting) · Claude Haiku (autonomous architectural reasoning) · MAPE-K
+
+**Infrastructure:** minikube · k3d · kubedge · Traefik · RBAC · PersistentVolumes
 
 **CI/CD:** GitHub Actions → HuggingFace Spaces (auto-deploy on push to main)
 
@@ -156,91 +202,35 @@ Node 3 [Auto]:   reload model from HF
 
 ## Quickstart
 
-### 1. Clone & install
+> ⚠️ This project is a research/thesis platform — full local setup requires
+> k3d, Docker, Kaggle API credentials, HuggingFace token, and DagsHub access.
+> The sections below outline the key entry points.
 
+### ML Pipeline (DVC)
 ```bash
-git clone https://github.com/mKhaiTruong/thesis-redo-withMLOP-pneumonia-segmentation
-cd thesis-redo-withMLOP-pneumonia-segmentation
-pip install pip-tools
-pip-compile requirements-dev.in
-pip install -r requirements-dev.txt
-pip install -e .
-```
-
-### 2. Setup environment
-
-```bash
-cp .env.example .env
-# Fill in: KAGGLE_USERNAME, KAGGLE_API_TOKEN, DAGSHUB_TOKEN,
-#          HUGGING_FACE_TOKEN, MLFLOW_TRACKING_URI
-```
-
-### 3. Run pipeline (DVC)
-
-```bash
+cp .env.example .env  # fill in KAGGLE, DAGSHUB, HUGGINGFACE tokens
 dvc repro
 ```
 
-To switch models, edit `params.yaml`:
+### Inference (HuggingFace Space)
+Live demo — no setup required:
+[bill123mk-pneumonia-segmentation.hf.space](https://bill123mk-pneumonia-segmentation.hf.space/)
 
-```yaml
-prepare_base_model_params:
-  model_name: "unetpp" # unet | unetpp | deeplabv3 | manet | segformer
-  encoder: "efficientnet-b5" # efficientnet-b5 | mit_b2 | resnet50 | ...
-```
-
-Then `dvc repro` — outputs go to `artifacts/training/<model_name>_<encoder>/`.
-
-### 4. Run microservices (Docker)
-
+### Microservices (k3d)
 ```bash
-# Start data pipeline services
-docker compose up -d prefect ingestion transformation data_drift orchestrator
-
-# Start AI loop
-docker compose up -d lstm dqn ai_manager
-
-# Start monitoring
-docker compose up -d prometheus grafana
+k3d cluster create pneumonia -p "80:80@loadbalancer" -p "443:443@loadbalancer"
+kubectl apply -f k8s/
+curl -X POST http://pneumonia.local/lstm/train  # train LSTM on first run
 ```
-
-Services:
-| Service | Port | Role |
-|----------------|------|-------------------------------|
-| ingestion | 7861 | Download Kaggle datasets |
-| transformation | 7862 | Process NIfTI/PNG → training data |
-| data_drift | 7863 | Compute baseline & drift score |
-| orchestrator | 7867 | Prefect pipeline coordinator |
-| lstm | 7868 | State prediction |
-| dqn | 7869 | Action planning |
-| ai_manager | 7870 | MAPE-K loop (every 5 min) |
-| prefect | 4200 | Workflow UI |
-| prometheus | 9090 | Metrics scraping |
-| grafana | 3000 | Dashboard |
-
-### 5. Trigger retraining pipeline
-
-```bash
-curl -X POST http://localhost:7867/execute/trigger_retraining
-```
-
-Then go to [localhost:4200](http://localhost:4200) → watch Node 1 complete → train on Kaggle → Resume in Prefect UI.
-
-### 6. Serve locally
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 7860
-```
-
-Open [localhost:7860](http://localhost:7860) for the inference UI.
 
 ---
 
 ## Monitoring
 
-<img width="2551" height="910" alt="Image" src="https://github.com/user-attachments/assets/755b9ff4-dc6a-4ac6-bc17-73d6b18d4268" />
-
-<img width="2517" height="1180" alt="Image" src="https://github.com/user-attachments/assets/1634da7f-d35b-498b-8dc0-2d163866b67d" />
+<div align="center">
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/755b9ff4-dc6a-4ac6-bc17-73d6b18d4268" />
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/1634da7f-d35b-498b-8dc0-2d163866b67d" />
+</div>
 
 | Tool       | Role                                          |
 | ---------- | --------------------------------------------- |
@@ -258,6 +248,25 @@ X-Inference-Ms: 145.2
 ```
 
 ---
+
+## Monitoring With Custom Dashboard and Grafana Pre-defined Visualizations
+
+By running locustfile, the project mimics requests and users, though it is not accurate. There are 2 dashboards: Grafana and my own. Grafana covers all the visualizations, querying Prometheus's metrics. My custom app shows buttons that run locust file at different latency, requests/s, or drift score.
+
+<div align="center">
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/4c98c737-b386-4164-88f9-6c4124cb4ffa" />
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/49803382-579d-4c10-af66-ed6674a84874" />
+</div>
+
+---
+
+<div align="center">
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/d8f04e57-5448-419f-ae60-079d0364bac8" />
+  <img width="49%" alt="Image" src="https://github.com/user-attachments/assets/c7e94258-4f01-44cf-8213-43e316534db4" />
+</div>
+
+---
+
 
 ## Experiment Tracking
 
@@ -297,7 +306,9 @@ HF Space automatically downloads model weights from HF Model Hub on startup — 
 
 ## Known Limitations
 
-- INT8 quantization slower than FP32 for UNet++ (MatMul ops not efficiently quantized)
+- INT8 quantization slower than FP32 for UNet++ (SegFormer ops not efficiently quantized)
 - Kaggle GPU training requires manual trigger (GPU selection not supported via API)
 - MAPE-K cooldown: 300s between same action to prevent spam
-- Free HF Space shared RAM — system RAM may appear high due to other tenants
+- Edge Deployment is complete bust: Able to connect to Pi 5 through SSH, but Segformer Mit b5 + KubeEdge is too heavy for Pi
+
+---

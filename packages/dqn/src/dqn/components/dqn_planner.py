@@ -62,14 +62,15 @@ class DQNPlanner:
     def plan(self, state: dict) -> str:
         state_tensor = self._dict_to_tensor(state)
         
+        with torch.no_grad():
+            q_val = self.online_net(state_tensor)
+        
         if random.random() < self.epsilon:
             action_idx = random.randint(0, self.config.duel_dqn_params.action_size - 1)
             q_spread   = 0.0
         else:
-            with torch.no_grad():
-                q_val       = self.online_net(state_tensor)
-                action_idx  = q_val.argmax().item()
-                q_spread    = float(q_val.max() - q_val.min())
+            action_idx  = q_val.argmax().item()
+            q_spread    = float(q_val.max() - q_val.min())
         
         action = ACTIONS[action_idx] 
         logger.info(f"DQN action: {action} (epsilon={self.epsilon:.3f})")
@@ -82,14 +83,14 @@ class DQNPlanner:
     def _dict_to_tensor(self, state: dict) -> torch.Tensor:
         n = self.config.duel_dqn_params.output_steps  # 5
         values = (
-            [v / 100.0  for v in state.get("current_cpu",           [0.0])] +
-            [v / 1024.0 for v in state.get("current_ram",           [0.0])] +
-            [v / 5.0    for v in state.get("current_latency",       [0.0])] +
-            [v / 100.0  for v in state.get("current_drift",         [0.0])] +
-            [v / 100.0  for v in state.get("predicted_cpu",         [0.0])] +
-            [v / 1024.0 for v in state.get("predicted_ram",         [0.0])] +
-            [v / 5.0    for v in state.get("predicted_latency",     [0.0])] +
-            [v / 100.0  for v in state.get("predicted_drift",       [0.0])]
+            [v for v in state.get("current_cpu",           [0.0])] +
+            [v for v in state.get("current_ram",           [0.0])] +
+            [v for v in state.get("current_latency",       [0.0])] +
+            [v for v in state.get("current_drift",         [0.0])] +
+            [v for v in state.get("predicted_cpu",         [0.0])] +
+            [v for v in state.get("predicted_ram",         [0.0])] +
+            [v for v in state.get("predicted_latency",     [0.0])] +
+            [v for v in state.get("predicted_drift",       [0.0])]
         )
         return torch.tensor(values, dtype=torch.float32).unsqueeze(0).to(self.device)
     # ------------------------------------------------------------------------------------
@@ -118,7 +119,7 @@ class DQNPlanner:
         state = self.simulation.reset()
         total_reward = 0
             
-        for _ in range(200):
+        for _ in range(500):
             action_idx = self._select_action(state)
             next_state, reward, done = self.simulation.step(action_idx)
                 

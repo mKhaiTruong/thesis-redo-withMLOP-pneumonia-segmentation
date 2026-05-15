@@ -1,6 +1,6 @@
 import httpx
 
-GRAFANA_URL = "http://localhost:3000"
+GRAFANA_URL = "http://pneumonia.local/grafana"
 AUTH = ("admin", "admin")
 
 def create_dashboard(panels: list) -> dict:
@@ -67,3 +67,25 @@ def timeseries_panel(title: str, targets: list, unit: str, grid: dict) -> dict:
             "defaults": {"unit": unit}
         },
     }
+
+def setup_datasource():
+    r = httpx.post(
+        f"{GRAFANA_URL}/api/datasources",
+        json={
+            "name": "prometheus",
+            "type": "prometheus", 
+            "url": "http://prometheus:9090",
+            "access": "proxy",
+            "isDefault": True,
+            "uid": "prometheus"
+        },
+        auth=AUTH,
+        timeout=10
+    )
+    
+    if r.status_code in (200, 201):
+        print("Datasource created")
+    elif r.status_code == 409:
+        print("Datasource already exists — skipping")
+    else:
+        print(f"Datasource error: {r.status_code} {r.text}")

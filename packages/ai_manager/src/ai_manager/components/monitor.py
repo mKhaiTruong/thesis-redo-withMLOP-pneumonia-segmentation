@@ -1,8 +1,8 @@
 from ai_manager.components import BaseAIManagerComponent
-import httpx
+import httpx, os
 from core.logging import logger
 
-LSTM_URL = "http://lstm:7860"
+LSTM_URL   = os.getenv("LSTM_URL", "http://lstm:7860")
 
 class Monitor(BaseAIManagerComponent):
     def __init__(self, lstm_url: str = LSTM_URL):

@@ -4,8 +4,8 @@ version = "0.1.0"
 dependencies = [
     "pnseg-core",
     "httpx",
-    "docker",
     "prefect",
+    "kubernetes",
 ]
 
 [tool.setuptools.packages.find]

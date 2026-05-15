@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PneumoniaSegNet — MLOps Control</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080b0f;
+    --surface:  #0e1318;
+    --border:   #1c2530;
+    --border2:  #243040;
+    --text:     #c9d4e0;
+    --muted:    #4a5a6a;
+    --dim:      #2a3a4a;
+    --green:    #00e5a0;
+    --yellow:   #f0c040;
+    --red:      #ff4560;
+    --blue:     #38aaff;
+    --orange:   #ff8c42;
+    --green-bg: #001a12;
+    --yellow-bg:#1a1200;
+    --red-bg:   #1a0008;
+    --blue-bg:  #001428;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 24px;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  .header-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-sub   { font-size: 11px; color: var(--muted); }
+  .header-dot   {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite; margin-left: auto;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .grid-main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; color: var(--muted);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-header::before {
+    content:''; width:3px; height:3px;
+    border-radius:50%; background:var(--muted);
+  }
+  .panel-body { padding: 16px; }
+
+  /* SCENARIOS */
+  .scenario-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .scenario-btn {
+    width: 100%; padding: 14px 16px;
+    background: var(--bg); border: 1px solid var(--border2);
+    border-radius: 4px; color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    cursor: pointer; text-align: left;
+    transition: all 0.15s; position: relative; overflow: hidden;
+  }
+  .scenario-btn::before {
+    content:''; position:absolute;
+    left:0; top:0; bottom:0; width:3px;
+  }
+  .scenario-btn[data-s="high_load"]::before   { background: var(--blue); }
+  .scenario-btn[data-s="model_drift"]::before { background: var(--orange); }
+  .scenario-btn[data-s="degraded"]::before    { background: var(--red); }
+  .scenario-btn:hover { background: var(--surface); transform: translateX(2px); }
+  .scenario-btn.active { opacity: 0.6; cursor: wait; pointer-events: none; }
+
+  .scenario-name { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+  .scenario-desc { font-size: 10px; color: var(--muted); }
+
+  .action-btn {
+    width: 100%; padding: 11px;
+    background: transparent; border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    cursor: pointer; letter-spacing: 0.08em; transition: all 0.15s;
+  }
+  .btn-reset   { border: 1px solid var(--yellow); color: var(--yellow); }
+  .btn-reset:hover { background: var(--yellow-bg); }
+  .btn-decide  { border: 1px solid var(--blue); color: var(--blue); }
+  .btn-decide:hover { background: var(--blue-bg); }
+  .btn-decide.loading { opacity: 0.5; cursor: wait; pointer-events: none; }
+
+  /* DECISION */
+  .decision-idle { font-size: 11px; color: var(--muted); padding: 8px 0; }
+  .action-tag {
+    display: inline-block; padding: 3px 10px; border-radius: 3px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .tag-none     { background: var(--dim); color: var(--muted); }
+  .tag-spawn    { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue); }
+  .tag-swap     { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow); }
+  .tag-rollback { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red); }
+  .tag-error    { background: var(--red-bg);    color: var(--red); }
+
+  .decision-reasoning {
+    font-size: 11px; color: var(--text);
+    line-height: 1.7; margin-bottom: 10px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .decision-meta { font-size: 10px; color: var(--muted); display: flex; gap: 16px; }
+  .decision-meta span { color: var(--text); }
+
+  /* LOG */
+  .log-body {
+    height: 220px; overflow-y: auto; font-size: 10px;
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  }
+  .log-line {
+    padding: 4px 0; border-bottom: 1px solid var(--border);
+    display: flex; gap: 10px; line-height: 1.4;
+  }
+  .log-ts   { color: var(--dim); flex-shrink: 0; }
+  .log-ok   { color: var(--green); }
+  .log-err  { color: var(--red); }
+  .log-info { color: var(--blue); }
+  .log-warn { color: var(--yellow); }
+
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .waiting-bar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s linear infinite;
+    display: none;
+  }
+  .waiting-bar.active { display: block; }
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">PneumoniaSegNet MLOps</div>
+  <div class="header-sub">Claude Architecture · Autonomous Control Loop</div>
+  <div class="header-dot"></div>
+</header>
+
+<div class="grid-main">
+
+  <!-- LEFT — CONTROLS -->
+  <div class="panel">
+    <div class="panel-header">Controls</div>
+    <div class="panel-body">
+      <div class="scenario-list">
+
+        <button class="action-btn btn-reset" onclick="reset()">↺ RESET METRICS</button>
+
+        <button class="scenario-btn" data-s="high_load" onclick="trigger('high_load')">
+          <div class="scenario-name">⚡ High Load</div>
+          <div class="scenario-desc">100 users · drift=10 → spawn</div>
+        </button>
+        <button class="scenario-btn" data-s="model_drift" onclick="trigger('model_drift')">
+          <div class="scenario-name">🔄 Model Drift</div>
+          <div class="scenario-desc">drift=75 · low load → swap</div>
+        </button>
+        <button class="scenario-btn" data-s="degraded" onclick="trigger('degraded')">
+          <div class="scenario-name">🔻 Degraded</div>
+          <div class="scenario-desc">drift=15 · latency spike → rollback</div>
+        </button>
+
+        <button class="action-btn btn-decide" id="btn-decide" onclick="getDecision()">
+          ⚡ GET CLAUDE DECISION
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT — OUTPUT -->
+  <div class="right-col">
+
+    <div class="panel">
+      <div class="panel-header">Claude Architecture Decision</div>
+      <div class="waiting-bar" id="wait-bar"></div>
+      <div class="panel-body">
+        <div id="decision-body">
+          <div class="decision-idle">Select a scenario, wait ~60s for metrics to stabilize, then click GET CLAUDE DECISION.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Event Log</div>
+      <div class="panel-body" style="padding:12px 16px">
+        <div class="log-body" id="log"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BRIDGE = 'http://localhost:8888';
+
+window.addEventListener('load', () => log('Dashboard ready', 'info'));
+
+async function trigger(scenario) {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.add('active'));
+  log(`Starting scenario: ${scenario}`, 'info');
+
+  try {
+    const r    = await fetch(`${BRIDGE}/api/scenario/${scenario}`, { method: 'POST' });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    log(`Drift → ${data.drift_set} | Locust → ${data.locust_users}u`, 'ok');
+    log('Wait ~2mins for metrics to stabilize, then GET DECISION', 'warn');
+    document.getElementById('decision-body').innerHTML =
+      '<div class="decision-idle">⏳ Scenario active — wait 2mins then click GET CLAUDE DECISION.</div>';
+  } catch(e) {
+    log(`Error: ${e.message}`, 'err');
+  }
+
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+}
+
+async function reset() {
+  log('Resetting...', 'warn');
+  await fetch(`${BRIDGE}/api/reset`, { method: 'POST' });
+  log('Reset done — wait ~60s for histogram to clear', 'warn');
+  document.getElementById('decision-body').innerHTML =
+    '<div class="decision-idle">System reset. Wait ~2 mins for metrics to clear before next scenario.</div>';
+}
+
+async function getDecision() {
+  const btn = document.getElementById('btn-decide');
+  btn.classList.add('loading');
+  document.getElementById('wait-bar').classList.add('active');
+  log('Requesting Claude decision...', 'info');
+
+  try {
+    const r = await fetch(`${BRIDGE}/api/decision`, { method: 'POST' });
+    const d = await r.json();
+    renderDecision(d);
+    log(`Claude → ${d.action} (${(d.confidence*100).toFixed(0)}% confidence)`, 'ok');
+  } catch(e) {
+    log(`Error: ${e.message}`, 'err');
+  }
+
+  btn.classList.remove('loading');
+  document.getElementById('wait-bar').classList.remove('active');
+}
+
+function renderDecision(d) {
+  const tagClass = {
+    none: 'tag-none', spawn: 'tag-spawn',
+    swap: 'tag-swap',  rollback: 'tag-rollback'
+  }[d.action] || 'tag-error';
+
+  document.getElementById('decision-body').innerHTML = `
+    <span class="action-tag ${tagClass}">${d.action}</span>
+    <div class="decision-reasoning">${d.reasoning}</div>
+    <div class="decision-meta">
+      confidence <span>${(d.confidence * 100).toFixed(0)}%</span>
+      &nbsp;·&nbsp;
+      evolution_needed <span>${d.evolution_needed}</span>
+    </div>
+  `;
+}
+
+function log(msg, type = 'info') {
+  const el  = document.getElementById('log');
+  const ts  = new Date().toLocaleTimeString('en', {hour12: false});
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="log-ts">${ts}</span><span class="log-${type}">${msg}</span>`;
+  el.prepend(div);
+  if (el.children.length > 60) el.removeChild(el.lastChild);
+}
+</script>
+</body>
+</html>

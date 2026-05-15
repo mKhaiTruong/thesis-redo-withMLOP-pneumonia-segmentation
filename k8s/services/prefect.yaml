@@ -18,6 +18,13 @@ spec:
           command: ["prefect", "server", "start", "--host", "0.0.0.0"]
           ports:
             - containerPort: 4200
+          volumeMounts:
+            - name: prefect-data
+              mountPath: /root/.prefect
+      volumes:
+        - name: prefect-data
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
 ---
 apiVersion: v1
 kind: Service

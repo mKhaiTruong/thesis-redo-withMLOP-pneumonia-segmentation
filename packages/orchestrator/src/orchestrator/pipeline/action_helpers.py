@@ -1,44 +1,37 @@
-import os, httpx, docker
+import os, httpx
+from kubernetes import client, config as k8s_config
 from core.logging import logger
 from orchestrator import APP_URL
 
 # Scale app
 def _scale_app(replicas: int) -> dict: 
     try:
-        client = docker.from_env()
+        try:
+            k8s_config.load_incluster_config()
+        except:
+            k8s_config.load_kube_config()
         
-        existing = client.containers.list(filters={"name": "pneumonia-segmentation-app"})
-        if not existing:
-            return {"status": "SCALE FAILED — no app container found"}
+         
+        deployments = ["app-edge", "app"]
+        apps_v1 = client.AppsV1Api()
+        scaled = None
         
-        template = existing[0]
-        current_count = len(existing)
-        
-        if replicas > current_count:
-            stopped = client.containers.list(
-                all=True, 
-                filters={"name": "pneumonia-segmentation-app", "status": "exited"}
-            )
-            for c in stopped:
-                c.remove()
-                
-            for i in range(current_count+1, replicas+1):
-        
-                client.containers.run(
-                    image   = template.image,
-                    name    = f"pneumonia-segmentation-app-{i}",
-                    network = "pneumonia-segmentation_default",
-                    detach  = True,
-                    environment = template.attrs["Config"]["Env"],
+        for d in deployments:
+            try:
+                apps_v1.patch_namespaced_deployment_scale(
+                    name = d,
+                    namespace = "default",
+                    body = {"spec": {"replicas": replicas}}
                 )
-        
-        elif replicas < current_count:
-            sorted_containers = sorted(existing, key=lambda c: c.name)
-            for container in sorted_containers[replicas:]:
-                container.stop()
-                container.remove()
+                scaled = d
+                break
+            except Exception:
+                continue
             
-        return {"status": f"SCALED app TO {replicas} REPLICAS"}
+        if scaled:
+            return {"status": f"SCALED {scaled} TO {replicas} REPLICAS"}
+        
+        return {"status": "SCALE FAILED - no deployment found"}
     except Exception as e:
         logger.error(f"Scale failed: {e}")
         return {"status": "SCALE FAILED"}

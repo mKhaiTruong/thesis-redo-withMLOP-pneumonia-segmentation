@@ -17,11 +17,33 @@ class SystemSimulation:
         self.reset()
         
     def reset(self) -> np.ndarray:
-        self.cpu     = np.random.uniform(0.2, 0.5)
-        self.ram     = np.random.uniform(0.3, 0.6)
-        self.latency = np.random.uniform(0.01, 0.06)
-        self.drift   = np.random.uniform(0.0, 0.2)
-        self.step_n  = 0
+        scenario = np.random.choice(
+            ['healthy', 'high_drift', 'high_cpu', 'high_load'],
+            p=[0.2, 0.5, 0.2, 0.1]
+        )
+        
+        if scenario == 'healthy':
+            self.cpu     = np.random.uniform(0.2, 0.5)
+            self.ram     = np.random.uniform(0.3, 0.6)
+            self.latency = np.random.uniform(0.01, 0.06)
+            self.drift   = np.random.uniform(0.0, 0.2)
+        elif scenario == 'high_drift':
+            self.cpu     = np.random.uniform(0.1, 0.4)
+            self.ram     = np.random.uniform(0.3, 0.6)
+            self.latency = np.random.uniform(0.01, 0.05)
+            self.drift   = np.random.uniform(0.35, 0.8)
+        elif scenario == 'high_cpu':
+            self.cpu     = np.random.uniform(0.75, 0.95)
+            self.ram     = np.random.uniform(0.5, 0.8)
+            self.latency = np.random.uniform(0.05, 0.15)
+            self.drift   = np.random.uniform(0.0, 0.2)
+        elif scenario == 'high_load':
+            self.cpu     = np.random.uniform(0.7, 0.9)
+            self.ram     = np.random.uniform(0.6, 0.85)
+            self.latency = np.random.uniform(0.08, 0.2)
+            self.drift   = np.random.uniform(0.2, 0.5)
+        
+        self.step_n = 0
         return self._get_state()
 
     def _get_state(self) -> np.ndarray:
@@ -36,7 +58,7 @@ class SystemSimulation:
             predicted += [cpu, ram, lat, drift]
         return np.array(current + predicted, dtype=np.float32)
     
-    def step(self, action: int) -> tuple[np.ndarray, float, bool]:
+    def step(self, action: int):
         self.step_n  += 1
         self.cpu     += np.random.normal(0, 0.02)
         self.ram     += np.random.normal(0, 0.01)
@@ -53,8 +75,8 @@ class SystemSimulation:
             self.latency = max(0, self.latency - 0.1)
             self.ram     += 0.1
         elif action == 4:
-            self.cpu     = 0.2
-            self.latency = 0.01
+            self.latency = max(0, self.latency - 0.1)
+            self.ram     += 0.05
         elif action == 5:
             self.latency = max(0, self.latency - 0.15)
             self.cpu     = max(0, self.cpu - 0.1)
@@ -72,29 +94,49 @@ class SystemSimulation:
 
         reward = self._compute_reward(action)
         done   = self.step_n >= 200 or \
-                    self.ram  > self.config.ram_critical or \
-                    self.cpu  > self.config.cpu_critical
+                self.ram  > self.config.ram_critical or \
+                self.cpu  > self.config.cpu_critical
         return self._get_state(), reward, done
     
     def _compute_reward(self, action: int) -> float:
         reward = 0.0
-        
-        if self.ram     > self.config.ram_warning:     reward -= 3.0
-        if self.cpu     > self.config.cpu_warning:     reward -= 2.0
-        if self.latency > self.config.latency_warning: reward -= 2.0
-        if self.drift   > self.config.drift_warning:   reward -= 2.0
-        
+
+        if self.drift > self.config.drift_critical:
+            reward -= 2.0
+            if action == 0: reward -= 1.0
+        elif self.drift > self.config.drift_warning:
+            reward -= 0.8
+            if action == 0: reward -= 0.5
+
+        if self.cpu > self.config.cpu_critical:
+            reward -= 1.5
+            if action == 0: reward -= 0.5
+        elif self.cpu > self.config.cpu_warning:
+            reward -= 0.5
+
+        if self.ram > self.config.ram_critical:
+            reward -= 1.5
+            if action == 0: reward -= 0.5
+        elif self.ram > self.config.ram_warning:
+            reward -= 0.5
+
+        if self.latency > self.config.latency_critical:
+            reward -= 1.0
+            if action == 0: reward -= 0.3
+        elif self.latency > self.config.latency_warning:
+            reward -= 0.3
+
         if action != 0:
-            if (self.ram     < self.config.ram_warning  and
-                self.cpu     < self.config.cpu_warning  and
-                self.latency < self.config.latency_warning and
-                self.drift   < self.config.drift_warning):
+            if (self.drift   < self.config.drift_warning and
+                self.cpu     < self.config.cpu_warning   and
+                self.ram     < self.config.ram_warning   and
+                self.latency < self.config.latency_warning):
                 reward -= 1.0
-        
-        if (self.ram     < self.config.ram_warning      and
-            self.cpu     < self.config.cpu_warning      and
-            self.latency < self.config.latency_warning  and
-            self.drift   < self.config.drift_warning):
-            reward += 1.0
-        
+
+        if (self.drift   < self.config.drift_warning and
+            self.cpu     < self.config.cpu_warning   and
+            self.ram     < self.config.ram_warning   and
+            self.latency < self.config.latency_warning):
+            reward += 0.05
+
         return reward

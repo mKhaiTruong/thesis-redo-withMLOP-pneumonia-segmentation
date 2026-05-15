@@ -91,4 +91,5 @@ claude_params:
   max_tokens: 1024
   confidence_threshold: 0.3
   prometheus_url: "http://prometheus:9090"
+  lstm_url: "http://lstm:7860"
   orchestrator_url: "http://orchestrator:7860"

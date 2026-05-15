@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-edge
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-edge
+  template:
+    metadata:
+      labels:
+        app: app-edge
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+      tolerations:
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: app
+          image: bill123mk/pneumonia_mlops:app-arm64
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7860
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-edge
+spec:
+  selector:
+    app: app-edge
+  ports:
+    - port: 7860
+      targetPort: 7860
+      nodePort: 30786
+  type: NodePort

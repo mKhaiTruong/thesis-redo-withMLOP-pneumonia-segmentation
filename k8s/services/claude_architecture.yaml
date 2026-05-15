@@ -1,38 +1,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-manager
+  name: claude-architecture
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-manager
+      app: claude-architecture
   template:
     metadata:
       labels:
-        app: ai-manager
+        app: claude-architecture
     spec:
       containers:
-        - name: ai-manager
-          image: bill123mk/pneumonia_mlops:ai-manager
+        - name: claude-architecture
+          image: bill123mk/pneumonia_mlops:claude-architecture
           imagePullPolicy: Always
           ports:
             - containerPort: 7860
-          env:
-            - name: PREFECT_API_URL
-              value: "http://prefect:4200/api"
           envFrom:
             - secretRef:
                 name: app-secrets
+          volumeMounts:
+            - name: artifacts
+              mountPath: /app/artifacts
+      volumes:
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: artifacts-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai-manager
+  name: claude-architecture
 spec:
   selector:
-    app: ai-manager
+    app: claude-architecture
   ports:
     - port: 7860
       targetPort: 7860
